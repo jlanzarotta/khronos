@@ -29,6 +29,14 @@ scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
 scoop install khronos
 ----
 
+I personally like to alias the Khronos executable (khronos.exe) to a simple
+command, in my case, I used 'k'.  For Microsoft PowerShell, you can use
+
+[source, shell]
+----
+> Set-Alias -Name k -Value khronos
+----
+
 === Other operating systems
 
 To install Khronos, simply unzip the archive for your specific operating system into the directory of your choice.
