@@ -26,7 +26,7 @@ You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khrono
 scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
 
 # Install khronos.
-scoop install scoop-khronos/khronos
+scoop install khronos
 ----
 
 === Other operating systems
@@ -326,7 +326,7 @@ The `favorites` command tells Khronos that you would like to show all your curre
 $ k show --favorites
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK                
+ # | PROJECT+TASK
 ---+-----------------------------
  0 | general+training
  1 | general+product development
