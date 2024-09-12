@@ -1,0 +1,555 @@
+image:https://img.shields.io/github/v/release/jlanzarotta/khronos[GitHub Release]
+image:https://img.shields.io/github/downloads/jlanzarotta/khronos/total[GitHub Downloads (all assets, all releases)]
+image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/khronos[Go Version]
+
+= Khronos
+:toc: preamble
+:toclevels: 6
+:icons: font
+:sectnums:
+:numbered:
+:table-stripes: even
+
+Khronos is a simple command line tool use to track the time you spend on a
+specific project and the one or more tasks associated with that project.  It was
+inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.
+
+== Installation
+
+=== Scoop (Windows)
+
+You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khronos` bucket:
+
+[source, shell]
+----
+# Add the khronos bucket.
+scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
+
+# Install khronos.
+scoop install scoop-khronos/khronos
+----
+
+=== Other operating systems
+
+To install Khronos, simply unzip the archive for your specific operating system into the directory of your choice.
+
+== Natural Language Time
+
+Khronos supports natural language time constructs for a subset of
+commands.  Commands such as hello, add, break, and stretch have additional parameters
+that accept time an argument.  Any time you pass a time, Khronos will try
+to parse it as a natural language time.
+
+This feature can be very handy if you start a project/task and forget to add it simply by specifying the `--at` subcommand.
+
+[source, shell]
+----
+$ k hello --at "18 minutes ago"
+----
+
+The previous example tells Khronos that you want it to add a <<hello>> entry
+with the time that was 18 minutes ago.
+
+[source, shell]
+----
+$ k break lunch --at "12:30"
+----
+
+The previous example tells Khronos that you want it to add a <<break>> entry
+with the time that was at specifically "12:30PM".
+
+[source, shell]
+----
+$ k add project+task -- at "13:45"
+----
+
+The previous example tells Khronos that you want it to add an entry
+with the time that was at specifically "13:45".
+
+For more information about Natural Language Time as well as samples, head over
+to [https://pkg.go.dev/github.com/ijt/go-anytime]
+
+== Positional Commands
+
+Khronos has many commands for the user to use:
+
+=== hello
+
+The `hello` command tells Khronos you have arrived and to start tracking
+time.  This should be the first command you execute at the start of your day.
+
+[source, shell]
+----
+$ k hello
+----
+
+WARNING: Keep in mind that if you forget to execute the `hello` command at the start of the day, Khronos will think you worked throughout the night and calculate your time spent on your task accordingly when you run a `report`.  This may or may not be correct outcome.
+
+=== add
+
+The `add` command tells Khronos that you would like to record a project with optional one or more tasks you have just finished working on.
+
+[source, shell]
+----
+$ k add khronos+programming
+----
+
+The previous command tells Khronos that you just finished working on the project(khronos) and the task(programming).
+
+[source, shell]
+----
+$ k add khronos+programming+documentation
+----
+
+The previous command tells Khronos that you just finished working on the project(khronos) and the task(programming and documentation).
+
+==== note
+
+The `note` command tells Khronos that you would like to add a note associated with your new entry.
+
+[source, shell]
+----
+$ k add khronos+programming --note "I love programming."
+----
+
+==== favorite
+
+The `favorite` flag tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
+
+NOTE: Favorites are zero (0) based.
+
+Favorites are in the following format:
+
+[source,properties]
+----
+favorites:
+  - favorite: general+training
+  - favorite: general+product development
+  - favorite: general+personal time
+  - favorite: general+holiday
+  - favorite: general+vacation/PTO/Comp
+----
+
+[source, shell]
+----
+$ k add --favorite 0
+Adding Project[general] Task[training] Date[2023-12-07T14:10:02-05:00].
+----
+
+The previous command tells Khronos that you just finished working on the favorite referenced by the number '0'.  If we look in our _.khronos.yaml_ file for the '0' favorite, we find that it references the 'project1+task1' combination.  With that, 'project1+task1' would be automatically logged as being completed.
+
+TIP: Configuring and using favorites, help improve consistency as well as improves speed of entering frequently used project/task combinations.
+
+==== favorites
+
+If you are not sure the exact favorite # you want to log your time again, you can use the `--favorites` flag.  When using this, a list of favorites are show and you have the opportunity to select from the list.
+
+[source, shell]
+----
+$ k add --favorites
+Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
+
+ # | PROJECT+TASK
+---+-----------------------------
+ 0 | general+training
+ 1 | general+product development
+ 2 | general+personal time
+ 3 | general+holiday
+ 4 | general+vacation/PTO/Comp
+
+Please enter the number of the favorite; otherwise, [Return] to quit. > 0
+Adding Project[general] Task[training] Date[2023-12-07T14:10:02-05:00].
+----
+
+The previous command tells Khronos that you are unsure of which favorite you want, so show the list of favorites so you can choose.
+
+If you are using the `favorites` flag and want to add a note, make sure you use the `note` flag when you make the initial `khronos` call.  Here is an example:
+
+[source, shell]
+----
+$ k add --favorites --note "Here is my note associated with the project+task I will eventually select."
+----
+
+==== url
+
+An optional URL can be added to a favorite.  This URL will show up on various commands and reports.  This URL can be uses to a link to JIRA or any website you need to have linked to favorite.
+
+Here is an example:
+
+[source,properties]
+----
+favorites:
+  - favorite: general+training
+  - favorite: general+product development
+  - favorite: general+personal time
+  - favorite: general+holiday
+  - favorite: general+vacation/PTO/Comp
+  - favorite: project1+screen coding task
+    url: https://jira.yourcompany.com/task/sreen_coding_task
+.
+.
+.
+----
+
+=== amend
+
+The `amend` command tells Khronos that you are wanting to modify a recent entry's information.  By default, amend amends the most recent entry's information.  How if you would like to get a list of the entries for today, use the `--today` option.  More on the `--today` option below.
+
+==== today
+
+Using this option, you are shown a list of all the entries for today.  You are then given the opportunity to chose the entry you would like to amend.
+
+[source, shell]
+----
++---+----------+----------+---------------------------+
+|   | PROJECT  | TASK(S)  | DATE/TIME                 |
++---+----------+----------+---------------------------+
+| 1 | ***hello |          | 2024-04-15T07:23:03-04:00 |
+| 2 | general  | training | 2024-04-15T07:49:12-04:00 |
+| 3 | general  | training | 2024-04-15T08:29:02-04:00 |
+| 4 | general  | training | 2024-04-15T08:53:01-04:00 |
+| 5 | general  | training | 2024-04-15T09:18:23-04:00 |
++---+----------+----------+---------------------------+
+Please enter index number of the entry you would like to amend; otherwise, ENTER to quit...
+----
+
+You are prompted to modify each of the entry's properties and then asked to validate those modifications before they are committed to the database.
+
+IMPORTANT: The Date/Time must be in ISO8601 format. https://en.wikipedia.org/wiki/ISO_8601
+
+[source, shell]
+----
+$ k amend
+Amending...
+
+Project[proj-001]
+   Task[meeting]
+   Note[CRP with customer.]
+   Date[2024-04-10T10:32:24-04:00]
+
+Enter Project (empty for no change) [proj-001] : proj-002
+Enter Task (empty for no change) [meeting] :
+Enter Note (empty for no change) [CRP with customer.] :
+Enter Date Time (empty for no change) [2024-04-10T10:32:24-04:00] : 2024-04-10T10:302:00-00:00
+
+          | OLD                       | NEW
+----------+---------------------------+---------------------------
+ Project  | proj-001                  | proj-002
+ Task     | meeting                   | meeting
+ Note     | CRP with customer.        | CRP with customer.
+ Datetime | 2024-04-10T10:32:24-04:00 | 2024-04-10T10:30:00-00:00
+
+Commit these changes? (Y/N (yes/no))
+----
+
+=== break
+
+The `break` command tells Khronos that you are going went on a break.  The time associated with breaks are not added to your daily work time.  They are consider under the break classification when doing a `report'.
+
+[source, shell]
+----
+$ k break lunch
+----
+
+The previous command tells Khronos that you just finished your lunch break.
+
+==== note
+
+The `note` command tells Khronos that you would like to add a note associated with your new break.
+
+[source, shell]
+----
+$ k break --note "Went to the doctor."
+----
+
+=== edit
+
+The `edit` command tells Khronos you would like to edit the data file with the default system editor.
+
+=== nuke
+
+Over time as you enter new entries into the database, the database will naturally grow.  To clear out old entries, use the `nuke` command.
+
+==== all
+
+The `all` command tells Khronos that you would like to nukes ALL entries from the database.  This includes the current years.
+
+WARNING: Use this extreme caution as ALL entries will be nuked.  You are given ample warning before your entries are actually nuked.  YOU HAVE BEEN WARNED.
+
+[source, shell]
+----
+$k nuke --all
+Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+All entries nuked.
+----
+
+==== prior-years
+
+The `prior-years` command tells Khronos that you would like to nuke all entries prior to the current year.  So in other words, if you were tracking the past 5 years worth of entries in your database, and you issued the `prior-years` command, the past 4 years worth of entries would be nuked from the database, leaving just the current year.
+
+NOTE: You are given ample warning before your entries are actually nuked...
+
+[source, shell]
+----
+$k nuke --prior-years
+Are you sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
+WARNING: Are you REALLY sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
+LAST WARNING: Are you REALLY REALLY sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
+All entries prior to 2024 have been nuked.
+----
+
+==== dry-run
+
+The `dry-run` command tells Khronos that you do not really want anything nuked.  But instead just report on how many entries would have been nuked.
+
+[source, shell]
+----
+$k nuke --all --dry-run
+Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+All 639 entries would have been nuked.
+----
+
+=== show
+
+The `show` command tells Khronos you would like to show various information.
+
+==== favorites
+
+The `favorites` command tells Khronos that you would like to show all your currently configured favorites that are stored in the _.khronos.yaml_ file which is located in the installation directory.
+
+[source, shell]
+----
+$ k show --favorites
+Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
+
+ # | PROJECT+TASK                
+---+-----------------------------
+ 0 | general+training
+ 1 | general+product development
+ 2 | general+personal time
+ 3 | general+holiday
+ 4 | general+vacation/PTO/Comp
+----
+
+If one or more of your favorites have an associated URL, your favorites will be shown like this:
+
+[source, shell]
+----
+$ k show --favorites
+Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
+
+ # | PROJECT+TASK                | URL
+---+-----------------------------+-------------------------------------------------
+ 0 | general+training            | https://yoursite.com/url1
+ 1 | general+product development | https://yoursite.com/url2
+ 2 | general+personal time       |
+ 3 | general+holiday             |
+ 4 | general+vacation/PTO/Comp   |
+----
+
+==== statistics
+
+The `statistics` command tells Khronos that you would like to show some statistics related to the entries you have entered into the database.
+
+[source, shell]
+----
+$ k show --statistics
+
+ STATISTIC     | VALUE
+---------------+----------------------------------------------------------
+ First Entry   | Project[***hello] Task[] Date[2023-11-27T07:17:36-05:00] <1>
+ Last Entry    | Project[***hello] Task[] Date[2024-04-25T07:15:58-04:00] <2>
+ Total Records | 21 weeks 2 days 22 hours 58 minutes 22 seconds <3>
+----
+
+<1> The first entry in the database.
+<2> The last entry in the database.
+<3> The total duration that is currently in the database.
+
+=== report
+
+The `report` command tells Khronos you would like to run a report on your activities.  By default, you get the current days activities.
+
+A couple of things you will notice when you run a report is, first, the header.
+
+[source, shell]
+----
+------------ 2024-04-04 00:00:00(14) to 2024-04-04 23:59:59(14) -----------
+----
+
+The report header tell you that start and end date/time of the report as well as the week number in parentheses.
+
+Secondly, you will see the _Total Time_.  The _Total Time_ can be in two formats, which is controlled by the `split_work_from_break_time` configuration option.
+
+If `split_work_from_break_time` is set to `false`, you will get a combined _Total Time_...
+
+[source, shell]
+----
+Total Time: 3 hours 45 minutes 0 second
+----
+
+If `split_work_from_break_time` is set to `false`, you will get a split _Total Time_...
+
+[source, shell]
+----
+Total Working Time: 3 hours 30 minutes 0 second
+Total Break Time: 15 minutes
+----
+
+==== Options
+
+The `report` command had several handy options what allow you to customize what needs to be reported.
+
+===== date
+
+By specifying a date, this tells Khronos you would like to have a report for that specific date only.  The date MUST be in the following format `YYYY-mm-dd`.
+
+[source, shell]
+----
+$ k report 2019-04-05
+----
+
+===== --current-week
+
+By specifying the option `--current-week`, this tells Khronos you would like a report for the current week's activities.
+
+[source, shell]
+----
+$ k report --current-week
+----
+
+===== --previous-week
+
+By specifying the option `--previous-week`, this tells Khronos you would like a report for the previous week's activities.
+
+[source, shell]
+----
+$ k report --previous-week
+----
+
+===== --last-entry
+
+By specifying the option `--last-entry`, this tells Khronos you would like a report for just the last entry's activity.
+
+[source, shell]
+----
+$ k report --last-entry
+----
+
+===== --from
+
+By specifying the option `--from` _date_, this tells Khronos you would the report to start from this specific date.
+
+[source, shell]
+----
+$ k report --from 2019-03-02
+----
+
+===== --to
+
+By specifying the option `--to` _date_, this tells Khronos you would the report to end at this specific date.
+
+[source, shell]
+----
+$ k report --to 2019-03-02
+----
+
+===== --no-rounding
+
+By specifying the option `--no-rounding`, this tells Khronos you would
+the all the duration to be their original, unrounded values.  This option is good it you have durations that are
+less than the value you have configured for rounding.
+
+[source, shell]
+----
+$ k report --from 2019-04-01 --to 2019-04-13 --no-rounding
+$ k report --previous-week --no-rounding
+----
+
+=== stretch
+
+Stretches the last entry to the current or specified date/time.
+
+In the below example, the latest entry to 05-Dec-2023...  Khronos will as you if you want to perform the stretch or not.  If you enter (y or Yes), the latest entry is stretched.  If you enter (n/No), the latest entry is not stretched.
+
+[source, shell]
+----
+$ k stretch
+Would you like to stretch Project[***hello] to Tuesday, 05-Dec-2023 13:48:32 EST? (Y/N (yes/no)) yes
+Last entry was stretched.
+----
+
+=== web
+
+Opens the Khronos website in your default web browser.
+
+[source, shell]
+----
+$ k web
+Opening the Khronos website in your default browser...
+----
+
+== Configuration File
+
+When Khronos starts up, it checks to make sure there is a default configuration file in the default directory.  If the files does not exist, it is automatically crated.
+
+For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
+
+=== Default Configuration
+
+The default Microsoft Windows(R) Khronos configuration is as follows.  These configuration options can be modified by the user after installation.
+
+[source, yaml]
+----
+database_file: %USERPROFILE%\.khronos.db <1>
+debug: false <2>
+report: <3>
+    by_day: true
+    by_entry: true
+    by_project: true
+    by_task: true
+require_note: false <4>
+round_to_minutes: 15 <5>
+week_start: Sunday <6>
+show_by_day_totals: true <7>
+split_work_from_break_time: false <8>
+favorites: <9>
+  - favorite: general+training
+  - favorite: general+product development
+  - favorite: general+personal time
+  - favorite: general+holiday
+  - favorite: general+vacation/PTO/Comp
+----
+
+<1> The database file used by Khronos.  Default is `.khronos.db`.
+<2> If debug type information should be printed to the screen or not.  Default is `false`.
+<3> Indicated which report to run and which ones to not.
+<4> If a note is required when entering a new entry into Khronos.  Default is `false`.
+<5> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
+<6> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
+<7> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
+<8> Indicates if work and break time should be split into seperate values during reports or not.  The default is `false`.
+<9> The list of favorites.
+
+== Copyright and License
+
+BSD 3-Clause License
+
+Copyright (c) 2018-{localyear}, Jeff Lanzarotta
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,this list of conditions, and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

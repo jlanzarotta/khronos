@@ -1,2 +1,2 @@
 # khronos
-Khronos - Time Tracker
+Simple time trackering software written in Go.
