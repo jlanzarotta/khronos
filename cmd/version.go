@@ -58,7 +58,4 @@ func runVersion(_ *cobra.Command, _ []string) {
 "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n" +
 "------------------------------------------------------------------------------\n", 
 	color.YellowString(constants.APPLICATION_NAME), BuildVersion, BuildDateTime, time.Now().Format("2006"))
-	
-//	Copyright: (c) 2018-%s Jeff Lanzarotta, All rights reserved\n  Born on: %s\n",
-//		color.YellowString(constants.APPLICATION_NAME), BuildVersion, time.Now().Format("2006"), BuildDateTime)
 }
