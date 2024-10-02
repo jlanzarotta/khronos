@@ -7,6 +7,7 @@
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 2
+project_name: khronos
 
 env_files:
   # GoReleaser requires an API token with the 'repo' scope selected to deploy
@@ -18,6 +19,8 @@ before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod tidy
+    # Download all the modules in the dependency graph.
+    - go mod download
     # you may remove this if you don't need go generate
     - go generate ./...
 
@@ -27,11 +30,23 @@ builds:
     env:
       - CGO_ENABLED=1
     goos:
+      - freebsd
+      - linux
+      - openbsd
       - windows
     goarch:
       - amd64
     ldflags:
       -s -w -X khronos/cmd.BuildDateTime={{.Date}} -X khronos/cmd.BuildVersion={{.Version}}
+    ignore:
+      - goos: freebsd
+        goarch: arm
+      - goos: openbsd
+        goarch: arm
+      - goos: freebsd
+        goarch: arm64
+      - goos: openbsd
+        goarch: arm64
 
 archives:
   - format: tar.gz
@@ -51,12 +66,27 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 
+#signs:
+#  - artifacts: checksum
+#    args:
+#      - "--batch"
+#      - "--local-user"
+#      - "{{ .Env.GPG_FINGERPRINT }}"
+#      - "--output"
+#      - "${signature}"
+#      - "--detach-sign"
+#      - "${artifact}"
+#    stdin: '{{ .Env.GPG_PASSWORD }}'
+
 snapshot:
   version_template: '{{ .Tag }}-next'
 
 changelog:
   use: github-native
   sort: asc
+  filters:
+    exclude:
+      - README
 
 release:
   draft: false

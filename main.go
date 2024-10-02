@@ -1,5 +1,5 @@
 /*
-Copyright © 2023 Jeff Lanzarotta
+Copyright © 2018-2023 Jeff Lanzarotta
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

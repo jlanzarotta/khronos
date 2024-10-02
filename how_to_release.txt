@@ -8,7 +8,7 @@ To make a release...
 4. Commit and push changes.
 5. git tag -a 0.1.0 -m "Release 0.1.0."
 6. git push origin 0.1.0
-7. goreleaser release --clean
+7. goreleaser release --clean --fail-fast
 8. Go to github and make the release.
 
 If something happens and the tag is messed up, you will need to delete the
