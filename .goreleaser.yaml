@@ -30,18 +30,12 @@ builds:
     env:
       - CGO_ENABLED=1
     goos:
-      - freebsd
       - linux
       - windows
     goarch:
       - amd64
     ldflags:
       -s -w -X khronos/cmd.BuildDateTime={{.Date}} -X khronos/cmd.BuildVersion={{.Version}}
-    ignore:
-      - goos: freebsd
-        goarch: arm
-      - goos: freebsd
-        goarch: arm64
 
 archives:
   - format: tar.gz
