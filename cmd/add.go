@@ -146,6 +146,14 @@ func runAdd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	// Check if the note was empty and the require_note flag is set.  If so, require the note.
+	if stringUtils.IsEmpty(note) {
+		var required bool = viper.GetBool(constants.REQUIRE_NOTE)
+		if required {
+			note = promptForNote(required)
+		}
+	}
+
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note,
 		addTime.ToRfc3339String())
@@ -165,4 +173,29 @@ func runAdd(cmd *cobra.Command, args []string) {
 	// Write the new Entry to the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	db.InsertNewEntry(entry)
+}
+
+func promptForNote(required bool) string {
+	r := bufio.NewReader(os.Stdin)
+	var s string
+	var prompt string
+
+	if required {
+		prompt = "A note is required.  "
+	}
+
+	prompt += "Enter note > "
+
+	for {
+		fmt.Print(prompt)
+		s, _ = r.ReadString('\n')
+		s = strings.TrimSpace(s)
+
+		// If the result is empty, use the original passed in value.
+		if len(s) > 0 {
+			break
+		}
+	}
+
+	return s
 }

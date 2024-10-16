@@ -128,7 +128,7 @@ func initConfig() {
 	viper.SetDefault("round_to_minutes", 15)
 
 	// Require a note.
-	viper.SetDefault("require_note", false)
+	viper.SetDefault(constants.REQUIRE_NOTE, false)
 
 	// Set day of the week when determining start of the week.
 	viper.SetDefault("week_start", "Sunday")

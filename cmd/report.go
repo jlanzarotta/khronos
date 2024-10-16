@@ -59,13 +59,13 @@ func dateRange(date carbon.Carbon) (start carbon.Carbon, end carbon.Carbon) {
 }
 
 func init() {
-	reportCmd.Flags().BoolP("no-rounding", constants.EMPTY, false, "Reports all durations in their unrounded form.")
-	reportCmd.Flags().BoolP("current-week", constants.EMPTY, false, "Report on the current week's entries.")
-	reportCmd.Flags().BoolP("previous-week", constants.EMPTY, false, "Report on the previous week's entries.")
-	reportCmd.Flags().BoolP("last-entry", constants.EMPTY, false, "Display the last entry's information.")
-	reportCmd.Flags().StringVarP(&from, "from", constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
-	reportCmd.Flags().StringVarP(&to, "to", constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
-	reportCmd.MarkFlagsRequiredTogether("from", "to")
+	reportCmd.Flags().BoolP(constants.FLAG_NO_ROUNDING, constants.EMPTY, false, "Reports all durations in their unrounded form.")
+	reportCmd.Flags().BoolP(constants.FLAG_CURRENT_WEEK, constants.EMPTY, false, "Report on the current week's entries.")
+	reportCmd.Flags().BoolP(constants.FLAG_PREVIOUS_WEEK, constants.EMPTY, false, "Report on the previous week's entries.")
+	reportCmd.Flags().BoolP(constants.FLAG_LAST_ENTRY, constants.EMPTY, false, "Display the last entry's information.")
+	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
+	reportCmd.Flags().StringVarP(&to, constants.FLAG_TO, constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
+	reportCmd.MarkFlagsRequiredTogether(constants.FLAG_FROM, constants.FLAG_TO)
 	rootCmd.AddCommand(reportCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -183,7 +183,7 @@ func reportByDay(durations map[int64]models.UID, entries []models.Entry) {
 
 		if show_by_day_totals {
 			t.AppendSeparator()
-			t.AppendRow(table.Row{"", "", constants.TOTAL, secondsToHuman(totalPerDay, true)})
+			t.AppendRow(table.Row{constants.EMPTY, constants.EMPTY, constants.TOTAL, secondsToHuman(totalPerDay, true)})
 			t.AppendSeparator()
 		}
 	}
@@ -444,18 +444,18 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 	// See if the user asked to override round.  If no, use the rounding value
 	// from the configuration file.  Otherwise, set the rounding value to 0.
-	noRounding, _ := cmd.Flags().GetBool("no-rounding")
+	noRounding, _ := cmd.Flags().GetBool(constants.FLAG_NO_ROUNDING)
 	if !noRounding {
 		roundToMinutes = viper.GetInt64(constants.ROUND_TO_MINUTES)
 	} else {
 		roundToMinutes = 0
 	}
 
-	currentWeek, _ := cmd.Flags().GetBool("current-week")
-	previousWeek, _ := cmd.Flags().GetBool("previous-week")
-	lastEntry, _ := cmd.Flags().GetBool("last-entry")
-	fromDateStr, _ := cmd.Flags().GetString("from")
-	toDateStr, _ := cmd.Flags().GetString("to")
+	currentWeek, _ := cmd.Flags().GetBool(constants.FLAG_CURRENT_WEEK)
+	previousWeek, _ := cmd.Flags().GetBool(constants.FLAG_PREVIOUS_WEEK)
+	lastEntry, _ := cmd.Flags().GetBool(constants.FLAG_LAST_ENTRY)
+	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
+	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 
 	var reportNow = carbon.Now()
 
