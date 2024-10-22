@@ -75,7 +75,7 @@ func runHello(cmd *cobra.Command, _ []string) {
 	if !stringUtils.IsEmpty(atTimeStr) {
 		atTime, err := anytime.Parse(atTimeStr, time.Now())
 		if err != nil {
-			log.Fatalf("%s: Error parsing 'at' time. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			log.Fatalf("%s: Failed parsing 'at' time. %s.  For natural date examples see https://github.com/ijt/go-anytime\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 			os.Exit(1)
 		}
 
