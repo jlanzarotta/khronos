@@ -5,15 +5,15 @@ package cmd
 
 import (
 	"fmt"
+	"khronos/constants"
+	"khronos/internal/database"
+	"khronos/internal/models"
 	"log"
 	"math"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"khronos/constants"
-	"khronos/internal/database"
-	"khronos/internal/models"
 
 	"golang.org/x/term"
 
@@ -106,7 +106,7 @@ func plural(count int, singular string) (result string) {
 	return
 }
 
-func reportByDay(durations map[int64]models.UID, entries []models.Entry) {
+func reportByDay(entries []models.Entry) {
 	var show_by_day_totals bool = viper.GetBool(constants.SHOW_BY_DAY_TOTALS)
 	log.Printf("\n")
 	log.Printf("%s\n", dashes(" By Day "))
@@ -114,47 +114,39 @@ func reportByDay(durations map[int64]models.UID, entries []models.Entry) {
 
 	// Consolidate by day.
 	var consolidatedByDay map[string]map[string]models.Entry = make(map[string]map[string]models.Entry)
-	for _, e := range entries {
-		if strings.EqualFold(e.Project, constants.HELLO) {
-			continue
-		}
-
-		var task = e.GetTasksAsString()
-		consolidatedDay, found := consolidatedByDay[carbon.Parse(e.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)]
+	for _, entry := range entries {
+		var task = entry.GetTasksAsString()
+		consolidatedDay, found := consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)]
 		if found {
-			consolidatedProject, found := consolidatedDay[e.Project]
+			consolidatedProject, found := consolidatedDay[entry.Project]
 			if found {
 				if len(task) > 0 {
 					consolidatedProject.AddEntryProperty(constants.TASK, task)
 				}
 
 				// Add the rounded durations together.
-				consolidatedProject.Duration += round(durations[e.Uid].Duration)
+				consolidatedProject.Duration += round(entry.Duration)
 
 				// Replace the consolidated entry.
-				consolidatedByDay[carbon.Parse(e.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][e.Project] = consolidatedProject
+				consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][entry.Project] = consolidatedProject
 			} else {
-				var entry models.Entry = models.NewEntry(e.Uid, e.Project, e.Note, e.EntryDatetime)
-				entry.Duration = round(durations[e.Uid].Duration)
-				if len(task) > 0 {
-					entry.AddEntryProperty(constants.TASK, task)
-				}
+				var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
+				newEntry.Duration = round(entry.Duration)
+				newEntry.Properties = entry.Properties
 
 				// Add the new entry.
-				consolidatedByDay[carbon.Parse(e.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][e.Project] = entry
+				consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][entry.Project] = newEntry
 			}
 		} else {
 			// Since the EntryDatetime was not found, add it.
-			var entry models.Entry = models.NewEntry(e.Uid, e.Project, e.Note, e.EntryDatetime)
-			entry.Duration = round(durations[e.Uid].Duration)
-			if len(task) > 0 {
-				entry.AddEntryProperty(constants.TASK, task)
-			}
+			var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
+			newEntry.Duration = round(entry.Duration)
+			newEntry.Properties = entry.Properties
 
 			// Add the new entry.
-			var key string = carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)
+			var key string = carbon.Parse(newEntry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)
 			consolidatedByDay[key] = make(map[string]models.Entry)
-			consolidatedByDay[key][entry.Project] = entry
+			consolidatedByDay[key][newEntry.Project] = newEntry
 		}
 	}
 
@@ -192,61 +184,24 @@ func reportByDay(durations map[int64]models.UID, entries []models.Entry) {
 	log.Println(t.Render())
 }
 
-func reportByEntry(durations map[int64]models.UID, entries []models.Entry) {
+func reportByEntry(entries []models.Entry) {
 	log.Printf("\n")
 	log.Printf("%s\n", dashes(" By Entry "))
 	log.Printf("\n")
-
-	// Consolidate
-	var consolidatedByUid map[int64]models.Entry = make(map[int64]models.Entry)
-	for _, e := range entries {
-		var task = e.GetTasksAsString()
-		// Check if the project exists in the map or not.
-		consolidated, found := consolidatedByUid[e.Uid]
-		if found {
-			if len(task) > 0 {
-				consolidated.AddEntryProperty(constants.TASK, task)
-			}
-
-			// Add the consolidated object to the collection.
-			consolidatedByUid[e.Uid] = consolidated
-		} else {
-			var entry models.Entry = models.NewEntry(e.Uid, e.Project, e.Note, e.EntryDatetime)
-			entry.Duration = durations[e.Uid].Duration
-			if len(task) > 0 {
-				entry.AddEntryProperty(constants.TASK, task)
-			}
-			consolidatedByUid[e.Uid] = entry
-		}
-	}
-
-	// Since maps are not sorter in go... why, I have no idea, you need to first
-	// sort the keys and then access the map via those sorted keys.
-	var sortedKeys []int64 = make([]int64, 0, len(consolidatedByUid))
-	for key := range consolidatedByUid {
-		sortedKeys = append(sortedKeys, key)
-	}
-	sort.SliceStable(sortedKeys, func(i, j int) bool { return sortedKeys[i] < sortedKeys[j] })
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
 	t.Style().Options.DrawBorder = false
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 
-	// Add all the consolidated rows to the table.
-	for _, i := range sortedKeys {
-		var entry models.Entry = consolidatedByUid[i]
-
-		// Skip entries that match constants.HELLO.
-		if !strings.EqualFold(entry.Project, constants.HELLO) {
-			t.AppendRow(table.Row{
-				carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT),
-				carbon.Parse(entry.EntryDatetime).SubSeconds(int(entry.Duration)).Format(constants.CARBON_START_END_TIME_FORMAT) + " to " + carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_START_END_TIME_FORMAT),
-				secondsToHuman(round(entry.Duration), true),
-				entry.Project,
-				entry.GetTasksAsString(),
-				entry.Note})
-		}
+	for _, entry := range entries {
+		t.AppendRow(table.Row{
+			carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT),
+			carbon.Parse(entry.EntryDatetime).SubSeconds(int(entry.Duration)).Format(constants.CARBON_START_END_TIME_FORMAT) + " to " + carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_START_END_TIME_FORMAT),
+			secondsToHuman(round(entry.Duration), true),
+			entry.Project,
+			entry.GetTasksAsString(),
+			entry.Note})
 	}
 
 	// Render the table.
@@ -264,36 +219,30 @@ func reportByLastEntry() {
 	}
 }
 
-func reportByProject(durations map[int64]models.UID, entries []models.Entry) {
+func reportByProject(entries []models.Entry) {
 	log.Printf("\n")
 	log.Printf("%s\n", dashes(" By Project "))
 	log.Printf("\n")
 
 	// Consolidate by project.
 	var consolidatedByProject map[string]models.Entry = make(map[string]models.Entry)
-	for _, e := range entries {
+	for _, entry := range entries {
 		// Check if the project exists in the map or not.
-		consolidated, found := consolidatedByProject[e.Project]
+		consolidated, found := consolidatedByProject[entry.Project]
 		if found {
-			if len(e.GetTasksAsString()) > 0 {
-				consolidated.AddEntryProperty(constants.TASK, e.GetTasksAsString())
+			// It already existed, so update it.
+			if len(entry.GetTasksAsString()) > 0 {
+				consolidated.AddEntryProperty(constants.TASK, entry.GetTasksAsString())
 			}
-
-			// If the Uid changes, add the new duration.
-			if consolidated.Uid != e.Uid {
-				consolidated.Uid = e.Uid
-				consolidated.Duration += round(durations[e.Uid].Duration)
-			}
-
-			// Add the consolidated object to the collection.
-			consolidatedByProject[e.Project] = consolidated
+			consolidated.Duration += round(entry.Duration)
+			consolidatedByProject[entry.Project] = consolidated
 		} else {
-			var entry models.Entry = models.NewEntry(e.Uid, e.Project, e.Note, e.EntryDatetime)
-			entry.Duration = round(durations[e.Uid].Duration)
-			if len(e.GetTasksAsString()) > 0 {
-				entry.AddEntryProperty(constants.TASK, e.GetTasksAsString())
+			var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
+			newEntry.Duration = round(entry.Duration)
+			if len(entry.GetTasksAsString()) > 0 {
+				newEntry.AddEntryProperty(constants.TASK, entry.GetTasksAsString())
 			}
-			consolidatedByProject[e.Project] = entry
+			consolidatedByProject[entry.Project] = newEntry
 		}
 	}
 
@@ -324,28 +273,24 @@ func reportByProject(durations map[int64]models.UID, entries []models.Entry) {
 	log.Println(t.Render())
 }
 
-func reportByTask(durations map[int64]models.UID, entries []models.Entry) {
+func reportByTask(entries []models.Entry) {
 	log.Printf("\n")
 	log.Printf("%s\n", dashes(" By Task "))
 	log.Printf("\n")
 
 	var consolidateByTask map[string]models.Task = make(map[string]models.Task)
-	for _, e := range entries {
-		if strings.EqualFold(e.Project, constants.HELLO) {
-			continue
+	for _, entry := range entries {
+		var task = entry.GetTasksAsString()
+		consolidated, found := consolidateByTask[task]
+		if found {
+			consolidated.Duration += round(entry.Duration)
+			consolidateByTask[task] = consolidated
 		} else {
-			var t = e.GetTasksAsString()
-			consolidated, found := consolidateByTask[t]
-			if found {
-				consolidated.Duration += round(durations[e.Uid].Duration)
-				consolidateByTask[t] = consolidated
-			} else {
-				var task models.Task = models.NewTask(t)
-				task.Duration = round(durations[e.Uid].Duration)
-				task.AddTaskProperty(constants.PROJECT, e.Project)
-				task.AddTaskProperty(constants.URL, e.GetUrlAsString())
-				consolidateByTask[t] = task
-			}
+			var newTask models.Task = models.NewTask(task)
+			newTask.Duration = round(entry.Duration)
+			newTask.AddTaskProperty(constants.PROJECT, entry.Project)
+			newTask.AddTaskProperty(constants.URL, entry.GetUrlAsString())
+			consolidateByTask[task] = newTask
 		}
 	}
 
@@ -380,19 +325,16 @@ func reportByTask(durations map[int64]models.UID, entries []models.Entry) {
 	log.Println(t.Render())
 }
 
-func reportTotalWorkAndBreakTime(durations map[int64]models.UID, entries []models.Entry) {
+func reportTotalWorkAndBreakTime(entries []models.Entry) {
 	var totalWorkDuration int64 = 0
 	var totalBreakDuration int64 = 0
 
 	// Calculate total time worked and total times on break.
-	for _, e := range entries {
-		// Skip HELLOs.
-		if strings.EqualFold(e.Project, constants.HELLO) {
-			continue
-		} else if strings.EqualFold(e.Project, constants.BREAK) {
-			totalBreakDuration += round(durations[e.Uid].Duration)
+	for _, entry := range entries {
+		if strings.EqualFold(entry.Project, constants.BREAK) {
+			totalBreakDuration += round(entry.Duration)
 		} else {
-			totalWorkDuration += round(durations[e.Uid].Duration)
+			totalWorkDuration += round(entry.Duration)
 		}
 	}
 
@@ -511,17 +453,28 @@ func runReport(cmd *cobra.Command, _ []string) {
 		in = in + strconv.FormatInt(element.Uid, 10)
 	}
 
-	// Calculate the duration between each UID.
+	// Get all the Entries associated with the list of UIDs.
+	var entries []models.Entry = db.GetEntries(in)
 	if viper.GetBool("debug") {
-		log.Printf("\n*****\nCalculating Durations...\n*****\n")
+		log.Printf("\n*****\nDumping what GetEntries() returned...\n*****\n")
+		for _, entry := range entries {
+			log.Printf("UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v]\n",
+				entry.Uid, entry.Project, entry.Note, entry.EntryDatetime, entry.GetPropertiesAsString())
+		}
 	}
 
-	var durations map[int64]models.UID = make(map[int64]models.UID)
-	for i := range distinctUIDs {
+	var newEntries []models.Entry
+
+	// Calculate the duration between each UID.
+	if viper.GetBool("debug") {
+		log.Printf("\n*****\nUpdating entries with durations...\n*****\n")
+	}
+
+	for index := range entries {
 		// Check to see if the 1st element we have is a HELLO.  If not, we need to adjust
 		// accordingly.
-		if i == 0 || strings.EqualFold(distinctUIDs[i].Project, constants.HELLO) {
-			var current carbon.Carbon = carbon.Parse(distinctUIDs[i].EntryDatetime)
+		if index == 0 || strings.EqualFold(entries[index].Project, constants.HELLO) {
+			var current carbon.Carbon = carbon.Parse(entries[index].EntryDatetime)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
@@ -529,75 +482,105 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 			// Prior is Midnight since this is the 1st record.
 			var midnight carbon.Carbon = current.StartOfDay()
-			var uid models.UID = models.NewUID(distinctUIDs[i].Uid, distinctUIDs[i].EntryDatetime, current.DiffAbsInSeconds(midnight))
-			durations[distinctUIDs[i].Uid] = uid
+			var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, entries[index].EntryDatetime)
+			entry.Properties = entries[index].Properties
+			entry.Duration = current.DiffAbsInSeconds(midnight)
+			newEntries = append(newEntries, entry)
 		} else {
-			var current carbon.Carbon = carbon.Parse(distinctUIDs[i].EntryDatetime)
+			var current carbon.Carbon = carbon.Parse(entries[index].EntryDatetime)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
 			}
 
-			var prior carbon.Carbon = carbon.Parse(distinctUIDs[i-1].EntryDatetime)
+			var prior carbon.Carbon = carbon.Parse(entries[index-1].EntryDatetime)
 			if prior.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), prior.Error)
 				os.Exit(1)
 			}
 
-			var uid models.UID = models.NewUID(distinctUIDs[i].Uid, distinctUIDs[i].EntryDatetime, current.DiffAbsInSeconds(prior))
-			durations[distinctUIDs[i].Uid] = uid
+			// Are the days between the current and prior different?  If they
+			// are, that means we went over midnight.
+			if !current.IsSameDay(prior) {
+				// Since we have an entry that goes over midnight, we need to
+				// create two entries.  One for the time before midnight and one
+				// for the time after midnight.
+				if viper.GetBool("debug") {
+					log.Printf("We went over midnight.\n")
+					log.Printf("    current[%s] prior[%s]\n", current, prior)
+					log.Printf("    prior midnight[%s]\n", prior.EndOfDay())
+				}
+
+				// Before midnight.
+				var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, prior.EndOfDay().ToRfc3339String())
+				entry.Properties = entries[index].Properties
+				entry.Duration = prior.EndOfDay().DiffAbsInSeconds(prior)
+				newEntries = append(newEntries, entry)
+
+				// After midnight.
+				entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, current.ToRfc3339String())
+				entry.Properties = entries[index].Properties
+				entry.Duration = current.StartOfDay().DiffAbsInSeconds(current)
+				newEntries = append(newEntries, entry)
+			} else {
+				var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, entries[index].EntryDatetime)
+				entry.Properties = entries[index].Properties
+				entry.Duration = current.DiffAbsInSeconds(prior)
+				newEntries = append(newEntries, entry)
+			}
 		}
 	}
 
-	// If requested, dump all the data with the newly rounded durations.
 	if viper.GetBool("debug") {
-		log.Printf("\n*****\nDumping newly calculated duration...\n*****\n")
-
-		// Since maps are not sorter in go... why, I have no idea, you need to first
-		// sort the keys and then access the map via those sorted keys.
-		var sortedKeys []int64 = make([]int64, 0, len(durations))
-		for key := range durations {
-			sortedKeys = append(sortedKeys, key)
-		}
-
-		// Sort the keys.
-		sort.SliceStable(sortedKeys, func(i, j int) bool { return sortedKeys[i] < sortedKeys[j] })
-
-		for _, i := range sortedKeys {
-			log.Printf("Key[%d] Uid[%d] EntryDatetime[%s] Duration[%d or %s]\n",
-				i, durations[i].Uid, durations[i].EntryDatetime, durations[i].Duration,
-				secondsToHuman(durations[i].Duration, true))
+		log.Printf("\n*****\nDumping the NEW Entries collection...\n*****\n")
+		for index, entry := range newEntries {
+			log.Printf("Index[%d] UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v] Duration[%d or %s]\n",
+				index, entry.Uid, entry.Project, entry.Note, entry.EntryDatetime, entry.GetPropertiesAsString(), entry.Duration,
+				secondsToHuman(entry.Duration, true))
 		}
 	}
 
-	// Get all the Entries associated with the list of UIDs.
-	var entries []models.Entry = db.GetEntries(in)
+	var newEntriesWithoutHello []models.Entry
+	for index := range newEntries {
+		if strings.EqualFold(newEntries[index].Project, constants.HELLO) {
+			continue
+		} else {
+			var entry models.Entry = models.NewEntry(newEntries[index].Uid, newEntries[index].Project, newEntries[index].Note, newEntries[index].EntryDatetime)
+			entry.Properties = newEntries[index].Properties
+			entry.Duration = newEntries[index].Duration
+			newEntriesWithoutHello = append(newEntriesWithoutHello, entry)
+		}
+	}
+
 	if viper.GetBool("debug") {
-		log.Printf("\n*****\nDumping what GetEntries() returned...\n*****\n")
-		for _, element := range entries {
-			log.Printf("%d, %s, %#v, %s, %#v\n",
-				element.Uid, element.Project, element.Note, element.EntryDatetime,
-				element.GetPropertiesAsString())
+		log.Printf("\n*****\nDumping the NEW Entries without HELLOs collection...\n*****\n")
+		for index, entry := range newEntriesWithoutHello {
+			log.Printf("Index[%d] UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v] Duration[%d or %s]\n",
+				index, entry.Uid, entry.Project, entry.Note, entry.EntryDatetime, entry.GetPropertiesAsString(), entry.Duration,
+				secondsToHuman(entry.Duration, true))
 		}
 	}
+
+	// Replace our existing collection of entries with our new collection.
+	entries = newEntriesWithoutHello
 
 	// Run each of the reports, if configured to do so.
-	reportTotalWorkAndBreakTime(durations, entries)
+	reportTotalWorkAndBreakTime(entries)
 
 	if viper.GetBool(constants.REPORT_BY_PROJECT) {
-		reportByProject(durations, entries)
+		reportByProject(entries)
 	}
 
 	if viper.GetBool(constants.REPORT_BY_TASK) {
-		reportByTask(durations, entries)
+		reportByTask(entries)
 	}
 
 	if viper.GetBool(constants.REPORT_BY_ENTRY) {
-		reportByEntry(durations, entries)
+		reportByEntry(entries)
 	}
 
 	if viper.GetBool(constants.REPORT_BY_DAY) {
-		reportByDay(durations, entries)
+		reportByDay(entries)
 	}
 }
 
@@ -607,7 +590,7 @@ func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 	if inSeconds == 0 {
 		result = "< " + plural(int(roundToMinutes), "minute")
 	} else {
-		if (hmsOnly) {
+		if hmsOnly {
 			hours := inSeconds / 3600
 			inSeconds = inSeconds % 3600
 			minutes := inSeconds / 60
