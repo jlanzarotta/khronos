@@ -60,6 +60,14 @@ with the time that was 18 minutes ago.
 
 [source, shell]
 ----
+$ k hello --at "today at 7:30AM"
+----
+
+The previous example tells Khronos that you want it to add a <<hello>> entry
+with the time that was at 7:30AM this morning.  This is more straight and to the point.
+
+[source, shell]
+----
 $ k break lunch --at "12:30"
 ----
 
