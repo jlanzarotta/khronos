@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// webCmd represents the version command.
+// webCmd represents the web command.
 var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Open the Khronos website in your default browser",

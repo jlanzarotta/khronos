@@ -280,7 +280,12 @@ $ k break --note "Went to the doctor."
 
 === edit
 
-The `edit` command tells Khronos you would like to edit the data file with the default system editor.
+The `edit` command tells Khronos you would like to edit the Khronos configuration file with the default system editor.
+
+[source, shell]
+----
+$ k edit
+----
 
 === nuke
 
