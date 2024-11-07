@@ -20,7 +20,7 @@ require (
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/ijt/goparsify v0.0.0-20221203142333-3a5276334b8d // indirect
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
