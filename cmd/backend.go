@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"khronos/constants"
 	"log"
 	"os"
 	"os/exec"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -32,7 +34,7 @@ func runBackend(_ []string) {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Println(err.Error())
+		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 		os.Exit(1)
 	}
 

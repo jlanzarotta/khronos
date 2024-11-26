@@ -64,12 +64,30 @@ func getFavorite(index int) Favorite {
 	return config.Favorites[index]
 }
 
+func getNumberOfFavorites() int {
+	data, err := os.ReadFile(viper.ConfigFileUsed())
+	if err != nil {
+		log.Fatalf("%s: Error reading configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
+		os.Exit(1)
+	}
+
+	var config Configuration
+
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatalf("%s: Error unmarshalling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
+		os.Exit(1)
+	}
+
+	return len(config.Favorites)
+}
+
 func init() {
 	// Here you will define your flags and configuration settings.
 	addCmd.Flags().StringVarP(&at, constants.AT, constants.EMPTY, constants.EMPTY, constants.NATURAL_LANGUAGE_DESCRIPTION)
 	addCmd.Flags().StringVarP(&note, constants.NOTE, constants.EMPTY, constants.EMPTY, constants.NOTE_DESCRIPTION)
 	addCmd.Flags().IntVarP(&favorite, constants.FAVORITE, constants.EMPTY, -999, "Use the specified Favorite")
-	addCmd.Flags().BoolVarP(&favorites, constants.FAVORITES, constants.EMPTY, false, "Show the list of Favorites what you can select from")
+	//addCmd.Flags().BoolVarP(&favorites, constants.FAVORITES, constants.EMPTY, false, "Show the list of Favorites what you can select from")
 	rootCmd.AddCommand(addCmd)
 }
 
@@ -84,7 +102,8 @@ func runAdd(cmd *cobra.Command, args []string) {
 	if !stringUtils.IsEmpty(atTimeStr) {
 		atTime, err := anytime.Parse(atTimeStr, time.Now())
 		if err != nil {
-			log.Fatalf("%s: Failed parsing 'at' time. %s.  For natural date examples see https://github.com/ijt/go-anytime\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			log.Fatalf("%s: Failed parsing 'at' time. %s.  For natural date examples see https://github.com/ijt/go-anytime\n",
+				color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 			os.Exit(1)
 		}
 
@@ -95,38 +114,8 @@ func runAdd(cmd *cobra.Command, args []string) {
 	var url string = constants.EMPTY
 
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
-	favorites, _ := cmd.Flags().GetBool(constants.FAVORITES)
 
-	if favorites {
-		for {
-			showFavorites()
-
-			// Prompt the user for the index number of the filename they would like to send.
-			r := bufio.NewReader(os.Stdin)
-
-			fmt.Fprintf(os.Stderr, "\nPlease enter the number of the favorite to add; otherwise, [Return] to quit. > ")
-			var s, _ = r.ReadString('\n')
-			s = strings.TrimSpace(s)
-
-			// If the result is empty, the user wants to quit.
-			if len(s) <= 0 {
-				log.Printf("Nothing added.\n")
-				os.Exit(0)
-			}
-
-			// Convert the string to an integer, thus validating the user entered a number.
-			i, err := strconv.Atoi(s)
-			if err != nil {
-				log.Printf("Invalid number entered.\n")
-				continue
-			}
-
-			var fav Favorite = getFavorite(i)
-			projectTask = fav.Favorite
-			url = fav.URL
-			break
-		}
-	} else if favorite != -999 {
+	if favorite != -999 {
 		var fav Favorite = getFavorite(favorite)
 		projectTask = fav.Favorite
 		url = fav.URL
@@ -134,8 +123,41 @@ func runAdd(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			projectTask = args[0]
 		} else {
-			log.Fatalf("%s: Missing project+task or --favorite.", color.RedString(constants.FATAL_NORMAL_CASE))
-			os.Exit(1)
+			for {
+				if getNumberOfFavorites() <= 0 {
+					log.Fatalf("%s: No favorites found in configuration file[%s].  Unable to perform an interactive add.\n",
+						color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed())
+					os.Exit(1)
+				}
+
+				// Since no parameters were specified, do an interactive add.
+				showFavorites()
+
+				// Prompt the user for the index number of the filename they would like to send.
+				r := bufio.NewReader(os.Stdin)
+
+				fmt.Fprintf(os.Stderr, "\nPlease enter the number of the favorite to add; otherwise, [Return] to quit. > ")
+				var s, _ = r.ReadString('\n')
+				s = strings.TrimSpace(s)
+
+				// If the result is empty, the user wants to quit.
+				if len(s) <= 0 {
+					log.Printf("%s\n", color.YellowString("Nothing added."))
+					os.Exit(0)
+				}
+
+				// Convert the string to an integer, thus validating the user entered a number.
+				i, err := strconv.Atoi(s)
+				if err != nil {
+					log.Printf("Invalid number entered.\n")
+					continue
+				}
+
+				var fav Favorite = getFavorite(i)
+				projectTask = fav.Favorite
+				url = fav.URL
+				break
+			}
 		}
 	}
 
@@ -151,6 +173,12 @@ func runAdd(cmd *cobra.Command, args []string) {
 		var required bool = viper.GetBool(constants.REQUIRE_NOTE)
 		if required {
 			note = promptForNote(required)
+
+			// If the note is still empty, this is an indicator that the user wants to exit.
+			if len(note) <= 0 {
+				log.Printf("%s\n", color.YellowString("Nothing added."))
+				os.Exit(0)
+			}
 		}
 	}
 
@@ -184,18 +212,11 @@ func promptForNote(required bool) string {
 		prompt = "A note is required.  "
 	}
 
-	prompt += "Enter note > "
+	prompt += "Enter note or leave blank to quit. > "
 
-	for {
-		fmt.Print(prompt)
-		s, _ = r.ReadString('\n')
-		s = strings.TrimSpace(s)
-
-		// If the result is empty, use the original passed in value.
-		if len(s) > 0 {
-			break
-		}
-	}
+	fmt.Print(prompt)
+	s, _ = r.ReadString('\n')
+	s = strings.TrimSpace(s)
 
 	return s
 }

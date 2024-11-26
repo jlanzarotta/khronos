@@ -105,23 +105,71 @@ WARNING: Keep in mind that if you forget to execute the `hello` command at the s
 
 The `add` command tells Khronos that you would like to record a project with optional one or more tasks you have just finished working on.
 
+If you would like to perform an _interactive_ add, simply perform the following command.
+
+[source, shell]
+----
+$ k add
+----
+
+During an _interactive_ add, your list of favorites are displayed and you can interactively select from your list.
+
+[source, shell]
+----
+Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
+
+ # | PROJECT+TASK
+---+-----------------------------
+ 0 | general+training
+ 1 | general+product development
+ 2 | general+personal time
+ 3 | general+holiday
+ 4 | general+vacation/PTO/Comp
+
+Please enter the number of the favorite; otherwise, [Return] to quit. > 0
+----
+
+In this example, the user chose project/task 0.
+
+If the configuration option `require_note:` is set to `true`, Khronos will prompt the user to enter a note.  Otherwise, a note is not required.
+
+[source, shell]
+----
+Please enter the number of the favorite to add; otherwise, [Return] to quit. > 0
+A note is required.  Enter note or leave blank to quit. >
+----
+
+If the note is left blank/empty, nothing is added.
+
+[source, shell]
+----
+Nothing added.
+----
+
+If no favorites are found in your configuration file, an error is displayed and the interactive add is cancelled.
+
+[source, shell]
+----
+Fatal: No favorites found in configuration file[C:\Users\jlanzarotta\.khronos.yaml].  Unable to perform an interactive add.
+----
+
+If during an add, the project+task is specified, this tells Khronos that you just finished working on the project, `kronos` and the task, `programming`.
+
 [source, shell]
 ----
 $ k add khronos+programming
 ----
 
-The previous command tells Khronos that you just finished working on the project(khronos) and the task(programming).
+If during an add, you have multiple task you finished, you can specify then like below.  This tells Khronos that you just finished working on the project, `khronos` and the tasks, `programming` and `documentation`.
 
 [source, shell]
 ----
 $ k add khronos+programming+documentation
 ----
 
-The previous command tells Khronos that you just finished working on the project(khronos) and the task(programming and documentation).
-
 ==== note
 
-The `note` command tells Khronos that you would like to add a note associated with your new entry.
+The `--note` command tells Khronos that you would like to add a note associated with your new entry.
 
 [source, shell]
 ----
@@ -130,7 +178,7 @@ $ k add khronos+programming --note "I love programming."
 
 ==== favorite
 
-The `favorite` flag tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
+The `--favorite` flag tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
 
 NOTE: Favorites are zero (0) based.
 
@@ -146,6 +194,8 @@ favorites:
   - favorite: general+vacation/PTO/Comp
 ----
 
+If you want to finish working on a known favorite, you can use the `--favorite` flag to specify the favorite.
+
 [source, shell]
 ----
 $ k add --favorite 0
@@ -155,36 +205,6 @@ Adding Project[general] Task[training] Date[2023-12-07T14:10:02-05:00].
 The previous command tells Khronos that you just finished working on the favorite referenced by the number '0'.  If we look in our _.khronos.yaml_ file for the '0' favorite, we find that it references the 'project1+task1' combination.  With that, 'project1+task1' would be automatically logged as being completed.
 
 TIP: Configuring and using favorites, help improve consistency as well as improves speed of entering frequently used project/task combinations.
-
-==== favorites
-
-If you are not sure the exact favorite # you want to log your time again, you can use the `--favorites` flag.  When using this, a list of favorites are show and you have the opportunity to select from the list.
-
-[source, shell]
-----
-$ k add --favorites
-Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
-
- # | PROJECT+TASK
----+-----------------------------
- 0 | general+training
- 1 | general+product development
- 2 | general+personal time
- 3 | general+holiday
- 4 | general+vacation/PTO/Comp
-
-Please enter the number of the favorite; otherwise, [Return] to quit. > 0
-Adding Project[general] Task[training] Date[2023-12-07T14:10:02-05:00].
-----
-
-The previous command tells Khronos that you are unsure of which favorite you want, so show the list of favorites so you can choose.
-
-If you are using the `favorites` flag and want to add a note, make sure you use the `note` flag when you make the initial `khronos` call.  Here is an example:
-
-[source, shell]
-----
-$ k add --favorites --note "Here is my note associated with the project+task I will eventually select."
-----
 
 ==== url
 
