@@ -24,7 +24,7 @@ import (
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
-	Use:   "add project+task...",
+	Use:   "add [project+task...]",
 	Args:  cobra.MaximumNArgs(1),
 	Short: "Add a completed task",
 	Long: `Once you have completed a task, use this command to add that newly
@@ -87,7 +87,6 @@ func init() {
 	addCmd.Flags().StringVarP(&at, constants.AT, constants.EMPTY, constants.EMPTY, constants.NATURAL_LANGUAGE_DESCRIPTION)
 	addCmd.Flags().StringVarP(&note, constants.NOTE, constants.EMPTY, constants.EMPTY, constants.NOTE_DESCRIPTION)
 	addCmd.Flags().IntVarP(&favorite, constants.FAVORITE, constants.EMPTY, -999, "Use the specified Favorite")
-	//addCmd.Flags().BoolVarP(&favorites, constants.FAVORITES, constants.EMPTY, false, "Show the list of Favorites what you can select from")
 	rootCmd.AddCommand(addCmd)
 }
 
