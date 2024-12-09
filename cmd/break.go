@@ -13,7 +13,7 @@ import (
 
 	"github.com/agrison/go-commons-lang/stringUtils"
 	"github.com/fatih/color"
-	"github.com/golang-module/carbon/v2"
+	"github.com/dromara/carbon/v2"
 	"github.com/ijt/go-anytime"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

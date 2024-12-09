@@ -12,7 +12,7 @@ import (
 	"khronos/internal/models"
 
 	"github.com/fatih/color"
-	"github.com/golang-module/carbon/v2"
+	"github.com/dromara/carbon/v2"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 )

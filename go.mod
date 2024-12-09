@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/agrison/go-commons-lang v0.0.0-20240106075236-2e001e6401ef
-	github.com/golang-module/carbon/v2 v2.4.1
+	github.com/dromara/carbon/v2 v2.5.2
 	github.com/ijt/go-anytime v1.9.2
 	github.com/mattn/go-sqlite3 v1.14.24
 	golang.org/x/term v0.27.0
@@ -26,7 +26,7 @@ require (
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.6.3
-	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
