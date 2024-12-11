@@ -445,15 +445,6 @@ Total Break Time: 15 minutes
 
 The `report` command had several handy options what allow you to customize what needs to be reported.
 
-===== date
-
-By specifying a date, this tells Khronos you would like to have a report for that specific date only.  The date MUST be in the following format `YYYY-mm-dd`.
-
-[source, shell]
-----
-$ k report 2019-04-05
-----
-
 ===== --current-week
 
 By specifying the option `--current-week`, this tells Khronos you would like a report for the current week's activities.
@@ -497,6 +488,33 @@ By specifying the option `--to` _date_, this tells Khronos you would the report 
 [source, shell]
 ----
 $ k report --to 2019-03-02
+----
+
+===== --today
+
+By specifying the option `--today`, this tells Khronos you would the report specifically for today.
+
+[source, shell]
+----
+$ k report --today
+----
+
+===== --yesterday
+
+By specifying the option `--yesterday`, this tells Khronos you would the report specifically for yesterday.
+
+[source, shell]
+----
+$ k report --yesterday
+----
+
+===== --date
+
+By specifying the option `--date`, this tells Khronos you would the report specifically for the given date. The date MUST be in the following format `YYYY-mm-dd`.
+
+[source, shell]
+----
+$ k report --date 2024-10-11
 ----
 
 ===== --no-rounding

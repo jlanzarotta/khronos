@@ -18,8 +18,8 @@ import (
 	"golang.org/x/term"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,6 +27,7 @@ import (
 
 var from string
 var to string
+var givenDate string
 
 var daysOfWeek = map[string]string{}
 var roundToMinutes int64
@@ -62,6 +63,9 @@ func init() {
 	reportCmd.Flags().BoolP(constants.FLAG_NO_ROUNDING, constants.EMPTY, false, "Reports all durations in their unrounded form.")
 	reportCmd.Flags().BoolP(constants.FLAG_CURRENT_WEEK, constants.EMPTY, false, "Report on the current week's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_PREVIOUS_WEEK, constants.EMPTY, false, "Report on the previous week's entries.")
+	reportCmd.Flags().BoolP(constants.FLAG_YESTERDAY, constants.EMPTY, false, "Report on yesterday's entries.")
+	reportCmd.Flags().BoolP(constants.FLAG_TODAY, constants.EMPTY, false, "Report on today's entries.")
+	reportCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "Report on the given day's entries in "+constants.DATE_FORMAT+" format.")
 	reportCmd.Flags().BoolP(constants.FLAG_LAST_ENTRY, constants.EMPTY, false, "Display the last entry's information.")
 	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
 	reportCmd.Flags().StringVarP(&to, constants.FLAG_TO, constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
@@ -395,6 +399,8 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 	currentWeek, _ := cmd.Flags().GetBool(constants.FLAG_CURRENT_WEEK)
 	previousWeek, _ := cmd.Flags().GetBool(constants.FLAG_PREVIOUS_WEEK)
+	yesterday, _ := cmd.Flags().GetBool(constants.FLAG_YESTERDAY)
+	givenDateStr, _ := cmd.Flags().GetString(constants.FLAG_DATE)
 	lastEntry, _ := cmd.Flags().GetBool(constants.FLAG_LAST_ENTRY)
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
@@ -416,10 +422,21 @@ func runReport(cmd *cobra.Command, _ []string) {
 		!stringUtils.IsEmpty(toDateStr) {
 		start = carbon.Parse(fromDateStr)
 		end = carbon.Parse(toDateStr)
+	} else if !stringUtils.IsEmpty(givenDateStr) {
+		// Report for given date.
+		start = carbon.Parse(givenDateStr).StartOfDay()
+		end = carbon.Parse(givenDateStr).EndOfDay()
 	} else {
-		// Report for today.
-		start = carbon.Now().StartOfDay()
-		end = carbon.Now().EndOfDay()
+		if yesterday {
+			// Report for yesterday
+			yesterday := carbon.Yesterday()
+			start = yesterday.StartOfDay()
+			end = yesterday.EndOfDay()
+		} else {
+			// Report for today.
+			start = carbon.Now().StartOfDay()
+			end = carbon.Now().EndOfDay()
+		}
 	}
 
 	var startWeek int = start.WeekOfYear()
