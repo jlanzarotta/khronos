@@ -26,8 +26,8 @@ import (
 var addCmd = &cobra.Command{
 	Use:   "add [project+task...]",
 	Args:  cobra.MaximumNArgs(1),
-	Short: "Add a completed task",
-	Long: `Once you have completed a task, use this command to add that newly
+	Short: "Add a completed entry",
+	Long: `Once you have completed a entry (project+task), use this command to add that newly
 completed task to the database with an optional note.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runAdd(cmd, args)
