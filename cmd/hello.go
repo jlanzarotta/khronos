@@ -1,20 +1,17 @@
-/*
-Copyright © 2023 Jeff Lanzarotta
-*/
 package cmd
 
 import (
+	"khronos/constants"
+	"khronos/internal/database"
+	"khronos/internal/models"
 	"log"
 	"os"
 	"os/user"
 	"time"
-	"khronos/constants"
-	"khronos/internal/database"
-	"khronos/internal/models"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/ijt/go-anytime"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,7 +81,7 @@ func runHello(cmd *cobra.Command, _ []string) {
 
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToRfc3339String())
-	log.Printf(greetings(helloTime) + " Time tracking starts now.\n")
+	log.Printf(greetings(helloTime) + " Time tracking has now started.\n")
 
 	if viper.GetBool("debug") {
 		log.Printf("helloTime=[%v] entry=[%v]\n", helloTime, entry)
