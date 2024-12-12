@@ -20,7 +20,7 @@ import (
 var nukeCmd = &cobra.Command{
 	Use:   "nuke",
 	Short: "Nukes entries from the sqlite database",
-	Long:  `As you continuously add completed entries, the database continues to go unbounded.  The nuke command allows you to manage the database size.`,
+	Long:  `As you continuously add completed entries, the database continues to grow unbounded.  The nuke command allows you to manage the size of your database.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runNuke(cmd, args)
 	},
