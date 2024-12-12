@@ -32,7 +32,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -56,12 +55,6 @@ var rootCmd = &cobra.Command{
 	Long: `Khronos is a simple command line tool use to track the time you spend
 on a specific project and the one or more tasks associated with that project.
 It was inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("No commands given. Run 'k help' for usage help.\n" +
-			"Also try commands:\n\n" +
-			"k version\n" +
-			"k help report")
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
