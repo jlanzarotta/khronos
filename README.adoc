@@ -153,7 +153,7 @@ If no favorites are found in your configuration file, an error is displayed and 
 Fatal: No favorites found in configuration file[C:\Users\jlanzarotta\.khronos.yaml].  Unable to perform an interactive add.
 ----
 
-If during an add, the project+task is specified, this tells Khronos that you just finished working on the project, `kronos` and the task, `programming`.
+If during an add, the project+task is specified, this tells Khronos that you just finished working on the project, `khronos` and the task, `programming`.
 
 [source, shell]
 ----
