@@ -41,6 +41,57 @@ command, in my case, I used 'k'.  For Microsoft PowerShell, you can use
 
 To install Khronos, simply unzip the archive for your specific operating system into the directory of your choice.
 
+== Configuration
+
+When Khronos starts up, it checks to make sure there is a default configuration file.  If it does not exist, it is automatically created for you.
+
+Khronos uses the following precedence order when determining where the configuration file is located. Each item listed, takes precedence over the item below it:
+
+NOTE: For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
+
+. per-user configuration file
+.. %USERPROFILE%/.khronos.yaml
+.. $HOME/.khronos.yaml
+. XDG_CONFIG_HOME configuration file
+.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml 
+.. $XDG_CONFIG_HOME/khronos/.khronos.yaml
+
+=== Default Configuration
+
+The default Microsoft Windows(R) Khronos configuration is as follows.  These configuration options can be modified by the user after installation.
+
+[source, yaml]
+----
+database_file: %USERPROFILE%\.khronos.db <1>
+debug: false <2>
+report: <3>
+    by_day: true
+    by_entry: true
+    by_project: true
+    by_task: true
+require_note: false <4>
+round_to_minutes: 15 <5>
+week_start: Sunday <6>
+show_by_day_totals: true <7>
+split_work_from_break_time: false <8>
+favorites: <9>
+  - favorite: general+training
+  - favorite: general+product development
+  - favorite: general+personal time
+  - favorite: general+holiday
+  - favorite: general+vacation/PTO/Comp
+----
+
+<1> The database file used by Khronos.  Default is `.khronos.db`.
+<2> If debug type information should be printed to the screen or not.  Default is `false`.
+<3> Indicated which report to run and which ones to not.
+<4> If a note is required when entering a new entry into Khronos.  Default is `false`.
+<5> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
+<6> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
+<7> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
+<8> Indicates if work and break time should be split into seperate values during reports or not.  The default is `false`.
+<9> The list of favorites.
+
 == Natural Language Time
 
 Khronos supports natural language time constructs for a subset of
@@ -551,57 +602,6 @@ Opens the Khronos website in your default web browser.
 $ k web
 Opening the Khronos website in your default browser...
 ----
-
-== Configuration File
-
-When Khronos starts up, it checks to make sure there is a default configuration file.  If it does not exist, it is automatically created for you.
-
-Khronos uses the following precedence order when determining where the configuration file is located. Each item listed, takes precedence over the item below it:
-
-NOTE: For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
-
-. per-user configuration file
-.. %USERPROFILE%/.khronos.yaml
-.. $HOME/.khronos.yaml
-. XDG_CONFIG_HOME configuration file
-.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml 
-.. $XDG_CONFIG_HOME/khronos/.khronos.yaml
-
-=== Default Configuration
-
-The default Microsoft Windows(R) Khronos configuration is as follows.  These configuration options can be modified by the user after installation.
-
-[source, yaml]
-----
-database_file: %USERPROFILE%\.khronos.db <1>
-debug: false <2>
-report: <3>
-    by_day: true
-    by_entry: true
-    by_project: true
-    by_task: true
-require_note: false <4>
-round_to_minutes: 15 <5>
-week_start: Sunday <6>
-show_by_day_totals: true <7>
-split_work_from_break_time: false <8>
-favorites: <9>
-  - favorite: general+training
-  - favorite: general+product development
-  - favorite: general+personal time
-  - favorite: general+holiday
-  - favorite: general+vacation/PTO/Comp
-----
-
-<1> The database file used by Khronos.  Default is `.khronos.db`.
-<2> If debug type information should be printed to the screen or not.  Default is `false`.
-<3> Indicated which report to run and which ones to not.
-<4> If a note is required when entering a new entry into Khronos.  Default is `false`.
-<5> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
-<6> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
-<7> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
-<8> Indicates if work and break time should be split into seperate values during reports or not.  The default is `false`.
-<9> The list of favorites.
 
 == Copyright and License
 
