@@ -554,9 +554,18 @@ Opening the Khronos website in your default browser...
 
 == Configuration File
 
-When Khronos starts up, it checks to make sure there is a default configuration file in the default directory.  If the files does not exist, it is automatically crated.
+When Khronos starts up, it checks to make sure there is a default configuration file.  If it does not exist, it is automatically created for you.
 
-For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
+Khronos uses the following precedence order when determining where the configuration file is located. Each item listed, takes precedence over the item below it:
+
+NOTE: For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
+
+. per-user configuration file
+.. %USERPROFILE%/.khronos.yaml
+.. $HOME/.khronos.yaml
+. XDG_CONFIG_HOME configuration file
+.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml 
+.. $XDG_CONFIG_HOME/khronos/.khronos.yaml
 
 === Default Configuration
 

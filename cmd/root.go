@@ -32,13 +32,13 @@ package cmd
 
 import (
 	"errors"
+	"khronos/constants"
+	"khronos/internal/database"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"khronos/constants"
-	"khronos/internal/database"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -105,8 +105,22 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Search config in home directory with name ".khronos" (without extension).
+		// Add the user's home directory to the search path.
 		viper.AddConfigPath(home)
+
+		// Add the XDG_CONFIG_HOME directory to the search path, if configured.
+		xdgConfigHome, found := os.LookupEnv("XDG_CONFIG_HOME")
+		if found {
+			xdgConfigPath := filepath.Join(xdgConfigHome, strings.ToLower(constants.APPLICATION_NAME))
+			_, err := os.Stat(xdgConfigPath)
+			if os.IsNotExist(err) {
+				// Do nothing.
+			} else {
+				viper.AddConfigPath(xdgConfigPath)
+			}
+		}
+
+		// Add the Khronos configuration file and extension type.
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".khronos")
 	}

@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 
 	"github.com/spf13/cobra"
@@ -92,7 +92,7 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		entry = db.GetLastEntry()
 	}
 
-	log.Printf("Amending...\n" + entry.Dump(true, constants.INDENT_AMOUNT) + "\n\n")
+	log.Printf("%s", "Amending...\n"+entry.Dump(true, constants.INDENT_AMOUNT)+"\n\n")
 
 	// Prompt to change project.
 	newProject := prompt(constants.PROJECT_NORMAL_CASE, entry.Project)

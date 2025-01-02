@@ -81,7 +81,7 @@ func runHello(cmd *cobra.Command, _ []string) {
 
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToRfc3339String())
-	log.Printf(greetings(helloTime) + " Time tracking has now started.\n")
+	log.Printf("%s", greetings(helloTime)+" Time tracking has now started.\n")
 
 	if viper.GetBool("debug") {
 		log.Printf("helloTime=[%v] entry=[%v]\n", helloTime, entry)
