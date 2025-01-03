@@ -93,7 +93,8 @@ changelog:
 release:
   draft: false
   replace_existing_draft: true
-
+  footer: |
+    **Full Changelog**: https://github.com/jlanzarotta/khronos/compare/{{ .PreviousTag }}...{{ .Tag }}
 scoops:
   - repository:
       owner: jlanzarotta
