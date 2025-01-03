@@ -70,11 +70,25 @@ snapshot:
   version_template: '{{ .Tag }}-next'
 
 changelog:
-  use: github-native
-  sort: asc
+  use: github
   filters:
     exclude:
-      - README
+      - '^Merge'
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat.*:+.*$"
+      order: 100
+    - title: 'Bug Fixes'
+      regexp: "^.*fix.*:+.*$"
+      order: 200
+    - title: 'Dependency Updates'
+      regexp: "^.*(feat|fix)\\(deps\\)*:+.*$"
+      order: 300
+    - title: 'Documentation Updates'
+      regexp: "^.*docs.*:+.*$"
+      order: 400
+    - title: Other work
+      order: 9999
 
 release:
   draft: false
