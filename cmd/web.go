@@ -41,8 +41,8 @@ import (
 // webCmd represents the web command.
 var webCmd = &cobra.Command{
 	Use:   "web",
-	Short: "Open the Khronos website in your default browser",
-	Long:  "Open the Khronos website in your default browser.",
+	Short: constants.WEB_SHORT_DESCRIPTION,
+	Long:  constants.WEB_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runWeb(cmd, args)
 	},

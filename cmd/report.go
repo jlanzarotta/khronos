@@ -55,9 +55,12 @@ import (
 var from string
 var to string
 var givenDate string
-
 var daysOfWeek = map[string]string{}
 var roundToMinutes int64
+var exportFilename string = constants.EMPTY
+var _cmd *cobra.Command
+
+var exportType = models.ExportTypeCSV
 
 // reportCmd represents the report command.
 var reportCmd = &cobra.Command{
@@ -86,6 +89,55 @@ func dateRange(date carbon.Carbon) (start carbon.Carbon, end carbon.Carbon) {
 	return start, end
 }
 
+func export(title string, t table.Writer) {
+	exporting, _ := _cmd.Flags().GetBool(constants.EXPORT)
+	if exporting {
+		typeStr, _ := _cmd.Flags().GetString(constants.EXPORT_TYPE)
+		if len(strings.TrimSpace(exportFilename)) == 0 {
+			// Create our new export file.
+			exportFilename = constants.APPLICATION_NAME_LOWERCASE + "_report_" + carbon.Now().ToShortDateTimeString()
+			if typeStr == string(models.ExportTypeCSV) {
+				exportFilename += ".csv"
+			} else if typeStr == string(models.ExportTypeHTML) {
+				exportFilename += ".html"
+			} else {
+				exportFilename += ".md"
+			}
+
+			_, err := os.OpenFile(exportFilename, os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// Open the file for appending.
+		file, err := os.OpenFile(exportFilename, os.O_APPEND|os.O_WRONLY, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Remember to close the file.
+		defer file.Close()
+
+		file.WriteString(title + "\n")
+
+		// Render the table to the file.
+		if typeStr == string(models.ExportTypeCSV) {
+			_, err = file.WriteString(t.RenderCSV())
+		} else if typeStr == string(models.ExportTypeHTML) {
+			_, err = file.WriteString(t.RenderHTML())
+		} else {
+			_, err = file.WriteString(t.RenderMarkdown())
+		}
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		file.WriteString("\n")
+	}
+}
+
 func init() {
 	reportCmd.Flags().BoolP(constants.FLAG_NO_ROUNDING, constants.EMPTY, false, "Reports all durations in their unrounded form.")
 	reportCmd.Flags().BoolP(constants.FLAG_CURRENT_WEEK, constants.EMPTY, false, "Report on the current week's entries.")
@@ -97,6 +149,9 @@ func init() {
 	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
 	reportCmd.Flags().StringVarP(&to, constants.FLAG_TO, constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
 	reportCmd.MarkFlagsRequiredTogether(constants.FLAG_FROM, constants.FLAG_TO)
+	reportCmd.Flags().BoolP(constants.EXPORT, constants.EMPTY, false, "Export to file.")
+	reportCmd.Flags().Var(&exportType, constants.EXPORT_TYPE, `Type of export file.  Allowed values: "csv", "html" or "md"`)
+	reportCmd.MarkFlagsRequiredTogether(constants.EXPORT, constants.EXPORT_TYPE)
 	rootCmd.AddCommand(reportCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -213,6 +268,9 @@ func reportByDay(entries []models.Entry) {
 
 	// Render the table.
 	log.Println(t.Render())
+
+	// Export table if needed.
+	export("report by day", t)
 }
 
 func reportByEntry(entries []models.Entry) {
@@ -237,6 +295,9 @@ func reportByEntry(entries []models.Entry) {
 
 	// Render the table.
 	log.Println(t.Render())
+
+	// Export table if needed.
+	export("report by entry", t)
 }
 
 func reportByLastEntry() {
@@ -302,6 +363,9 @@ func reportByProject(entries []models.Entry) {
 
 	// Render the table.
 	log.Println(t.Render())
+
+	// Export table if needed.
+	export("report by project", t)
 }
 
 func reportByTask(entries []models.Entry) {
@@ -354,6 +418,9 @@ func reportByTask(entries []models.Entry) {
 
 	// Render the table.
 	log.Println(t.Render())
+
+	// Export table if needed.
+	export("report by task", t)
 }
 
 func reportTotalWorkAndBreakTime(entries []models.Entry) {
@@ -414,6 +481,9 @@ func round(durationInSeconds int64) (result int64) {
 func runReport(cmd *cobra.Command, _ []string) {
 	var start carbon.Carbon
 	var end carbon.Carbon
+
+	// Save this so we can use it in other methods.
+	_cmd = cmd
 
 	// See if the user asked to override round.  If no, use the rounding value
 	// from the configuration file.  Otherwise, set the rounding value to 0.

@@ -56,9 +56,8 @@ import (
 var amendCmd = &cobra.Command{
 	Use:   "amend",
 	Args:  cobra.MaximumNArgs(1),
-	Short: "Amend an entry",
-	Long: `Amend is a convenient way to modify an entry, default is the last
-entry.  It lets you modify the project, task, and/or datetime.`,
+	Short: constants.AMEND_SHORT_DESCRIPTION,
+	Long: constants.AMEND_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runAmend(cmd, args)
 	},

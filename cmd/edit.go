@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"khronos/constants"
 	"log"
 	"os/exec"
 
@@ -41,8 +42,8 @@ import (
 // editCmd represents the edit command.
 var editCmd = &cobra.Command{
 	Use:   "edit",
-	Short: "Open the Khronos configuration file in your default editor",
-	Long:  "Open the Khronos configuration file in your default editor.",
+	Short: constants.EDIT_SHORT_DESCRIPTION,
+	Long:  constants.EDIT_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runEdit(cmd, args)
 	},

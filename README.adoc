@@ -4,7 +4,7 @@ image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/khronos[Go Ver
 
 = Khronos
 :toc: preamble
-:toclevels: 6
+:toclevels: 7
 :icons: font
 :sectnums:
 :numbered:
@@ -561,7 +561,7 @@ $ k report --yesterday
 
 ===== --date
 
-By specifying the option `--date`, this tells Khronos you would the report specifically for the given date. The date MUST be in the following format `YYYY-mm-dd`.
+By specifying the option `--date`, this tells Khronos you would like the report specifically for the given date. The date MUST be in the following format `YYYY-mm-dd`.
 
 [source, shell]
 ----
@@ -570,15 +570,28 @@ $ k report --date 2024-10-11
 
 ===== --no-rounding
 
-By specifying the option `--no-rounding`, this tells Khronos you would
-the all the duration to be their original, unrounded values.  This option is good it you have durations that are
-less than the value you have configured for rounding.
+By specifying the option `--no-rounding`, this tells Khronos you would the all
+the duration to be their original, unrounded values.  This option is good it you
+have durations that are less than the value you have configured for rounding.
 
 [source, shell]
 ----
 $ k report --from 2019-04-01 --to 2019-04-13 --no-rounding
 $ k report --previous-week --no-rounding
 ----
+
+==== --export type
+
+By specifying the option '--export', this tells Khronos you would like export the report to one three types, CSV, HTML, and Mark Down.  The default is CSV.
+
+[source, shell]
+----
+$ k report --current-week --export --type csv
+$ k report --previous-week --export --type html
+$ k report --export --type md
+----
+
+These commands will create a unique report file with the extension associated with the type you specified.  CSV produces a file ending in .csv, HTML produces a file ending in .html, and MD produces a file ending in .md.
 
 === stretch
 

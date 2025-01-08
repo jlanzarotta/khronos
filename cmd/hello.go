@@ -53,10 +53,8 @@ var at string
 // helloCmd represents the hello command
 var helloCmd = &cobra.Command{
 	Use:   "hello",
-	Short: "Start time tracking for the day",
-	Long: `In order to have khronos start tracking time is to run this
-command.  It informs khronos that you would like it to start tracking
-your time.`,
+	Short: constants.HELLO_SHORT_DESCRIPTION,
+	Long: constants.HELLO_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runHello(cmd, args)
 	},

@@ -49,9 +49,8 @@ import (
 // breakCmd represents the break command
 var breakCmd = &cobra.Command{
 	Use:   "break",
-	Short: "Add a break",
-	Long: `If you just spent time on break, use this command to add that time
-to the database.`,
+	Short: constants.BREAK_SHORT_DESCRIPTION,
+	Long: constants.BREAK_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runBreak(cmd, args)
 	},

@@ -49,8 +49,8 @@ import (
 // showCmd represents the show command
 var showCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show various information",
-	Long:  "Show various information.",
+	Short: constants.SHOW_SHORT_DESCRIPTION,
+	Long:  constants.SHOW_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runShow(cmd, args)
 	},

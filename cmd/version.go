@@ -45,8 +45,8 @@ var BuildDateTime string
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Show the version information",
-	Long:  "Show the version information.",
+	Short: constants.VERSION_SHORT_DESCRIPTION,
+	Long:  constants.VERSION_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runVersion(cmd, args)
 	},

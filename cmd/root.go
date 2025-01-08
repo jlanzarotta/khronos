@@ -51,10 +51,8 @@ var note string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "khronos",
-	Short: "Simple program used to track time spent on projects and tasks.",
-	Long: `Khronos is a simple command line tool use to track the time you spend
-on a specific project and the one or more tasks associated with that project.
-It was inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.`,
+	Short: constants.ROOT_SHORT_DESCRIPTION,
+	Long:  constants.ROOT_LONG_DESCRIPTION,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

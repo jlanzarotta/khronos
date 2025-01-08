@@ -53,8 +53,8 @@ import (
 // stretchCmd represents the stretch command
 var stretchCmd = &cobra.Command{
 	Use:   "stretch last project",
-	Short: "Stretch the latest entry",
-	Long:  "Stretch the latest entry to 'now' or the whatever is specified using the 'at' flag command.",
+	Short: constants.STRETCH_SHORT_DESCRIPTION,
+	Long:  constants.STRETCH_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runStretch(cmd, args)
 	},

@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"khronos/constants"
 	"log"
 	"os"
 
@@ -41,8 +42,8 @@ import (
 var configureCmd = &cobra.Command{
 	Use:     "configure",
 	Aliases: []string{"c", "config", "conf"},
-	Short:   "Write out a YAML config file",
-	Long:    "Write out a YAML config file. Print path to config file.",
+	Short:   constants.CONFIGURE_SHORT_DESCRIPTION,
+	Long:    constants.CONFIGURE_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runConfigure(args)
 	},
