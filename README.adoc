@@ -257,6 +257,27 @@ The previous command tells Khronos that you just finished working on the favorit
 
 TIP: Configuring and using favorites, help improve consistency as well as improves speed of entering frequently used project/task combinations.
 
+==== description
+
+An optional description can be added to a favorite.  This description will show up on various commands and reports.
+
+Here is an example:
+
+[source,properties]
+----
+favorites:
+  - favorite: general+training
+  - favorite: general+product development
+  - favorite: general+personal time
+  - favorite: general+holiday
+  - favorite: general+vacation/PTO/Comp
+  - favorite: project1+screen coding task
+    description: A very important project
+.
+.
+.
+----
+
 ==== url
 
 An optional URL can be added to a favorite.  This URL will show up on various commands and reports.  This URL can be uses to a link to JIRA or any website you need to have linked to favorite.

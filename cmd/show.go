@@ -31,12 +31,12 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"khronos/constants"
 	"log"
 	"os"
-	"khronos/constants"
 
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -68,8 +68,9 @@ type Configuration struct {
 }
 
 type Favorite struct {
-	Favorite string `yaml:"favorite"`
-	URL      string `yaml:"url"`
+	Favorite    string `yaml:"favorite"`
+	Description string `yaml:"description"`
+	URL         string `yaml:"url"`
 }
 
 func init() {
@@ -121,22 +122,34 @@ func showFavorites() {
 	log.Printf("Favorites found in configuration file[%s]:\n\n", viper.ConfigFileUsed())
 
 	var urlFound bool = false
+	var descriptionFound bool = false
 	for _, f := range config.Favorites {
 		if len(f.URL) > 0 {
 			urlFound = true
-			break
+		}
+
+		if len(f.Description) > 0 {
+			descriptionFound = true
 		}
 	}
 
 	t.Style().Options.DrawBorder = false
-	if urlFound {
-		t.AppendHeader(table.Row{"#", "project+task", "url"})
+	if descriptionFound && urlFound {
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL})
+	} else if descriptionFound {
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION})
+	} else if urlFound {
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.URL})
 	} else {
-		t.AppendHeader(table.Row{"#", "project+task"})
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK})
 	}
 
 	for i, f := range config.Favorites {
-		if len(f.URL) > 0 {
+		if descriptionFound && urlFound {
+			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.URL})
+		} else if descriptionFound {
+			t.AppendRow(table.Row{i, f.Favorite, f.Description})
+		} else if urlFound {
 			t.AppendRow(table.Row{i, f.Favorite, f.URL})
 		} else {
 			t.AppendRow(table.Row{i, f.Favorite})

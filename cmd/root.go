@@ -160,7 +160,7 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// No config file, just use defaults.
 			viper.SafeWriteConfig()
-			writeFavorites(home)
+			writeDefaultFavorites(home)
 			log.Printf("Unable to load config file, using/writing default values to [%s].\n", viper.ConfigFileUsed())
 		} else {
 			log.Fatalf("%s: Error reading config file: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
@@ -188,7 +188,7 @@ func initConfig() {
 	}
 }
 
-func writeFavorites(home string) {
+func writeDefaultFavorites(home string) {
 	// Populate the configuration file path and name.  We need to play some
 	// games here so that viper has a configuration file so we can append to it.
 	viper.AddConfigPath(home)
