@@ -546,7 +546,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	var distinctUIDs []database.DistinctUID = db.GetDistinctUIDs(start, end)
 
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nGetDistinctUIDs returned...\n*****\n")
 	}
 
@@ -556,7 +556,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	// Loop through the distinct UIDs and pull out the UID and construct the
 	// "in" statement for later use.
 	for _, element := range distinctUIDs {
-		if viper.GetBool("debug") {
+		if viper.GetBool(constants.DEBUG) {
 			log.Printf("%d, %s, %s\n", element.Uid, element.Project, element.EntryDatetime)
 		}
 
@@ -569,7 +569,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 	// Get all the Entries associated with the list of UIDs.
 	var entries []models.Entry = db.GetEntries(in)
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nDumping what GetEntries() returned...\n*****\n")
 		for _, entry := range entries {
 			log.Printf("UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v]\n",
@@ -580,7 +580,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	var newEntries []models.Entry
 
 	// Calculate the duration between each UID.
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nUpdating entries with durations...\n*****\n")
 	}
 
@@ -619,7 +619,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 				// Since we have an entry that goes over midnight, we need to
 				// create two entries.  One for the time before midnight and one
 				// for the time after midnight.
-				if viper.GetBool("debug") {
+				if viper.GetBool(constants.DEBUG) {
 					log.Printf("We went over midnight.\n")
 					log.Printf("    current[%s] prior[%s]\n", current, prior)
 					log.Printf("    prior midnight[%s]\n", prior.EndOfDay())
@@ -645,7 +645,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nDumping the NEW Entries collection...\n*****\n")
 		for index, entry := range newEntries {
 			log.Printf("Index[%d] UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v] Duration[%d or %s]\n",
@@ -666,7 +666,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nDumping the NEW Entries without HELLOs collection...\n*****\n")
 		for index, entry := range newEntriesWithoutHello {
 			log.Printf("Index[%d] UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v] Duration[%d or %s]\n",

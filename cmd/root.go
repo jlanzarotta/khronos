@@ -127,32 +127,32 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	// Set default database.
-	viper.SetDefault("database_file", filepath.Join(home, ".khronos.db"))
+	viper.SetDefault(constants.DATABASE_FILE, filepath.Join(home, ".khronos.db"))
 
 	// Round to 15 minute intervals by default.
-	viper.SetDefault("round_to_minutes", 15)
+	viper.SetDefault(constants.ROUND_TO_MINUTES, 15)
 
 	// Require a note.
 	viper.SetDefault(constants.REQUIRE_NOTE, false)
 
 	// Set day of the week when determining start of the week.
-	viper.SetDefault("week_start", "Sunday")
+	viper.SetDefault(constants.WEEK_START, "Sunday")
 
 	// Set debug to false.
-	viper.SetDefault("debug", false)
+	viper.SetDefault(constants.DEBUG, false)
 
 	// Set flag indicating if work and break time should be spit into separate values during reports.
-	viper.SetDefault("split_work_from_break_time", false)
+	viper.SetDefault(constants.SPLIT_WORK_FROM_BREAK_TIME, false)
 
 	// Should a daily total be shown for each day when rendering the "by day"
 	// report.
-	viper.SetDefault("show_by_day_totals", true)
+	viper.SetDefault(constants.SHOW_BY_DAY_TOTALS, true)
 
 	// Set each of the reports to true.
-	viper.SetDefault("report.by_project", true)
-	viper.SetDefault("report.by_task", true)
-	viper.SetDefault("report.by_entry", true)
-	viper.SetDefault("report.by_day", true)
+	viper.SetDefault(constants.REPORT_BY_PROJECT, true)
+	viper.SetDefault(constants.REPORT_BY_TASK, true)
+	viper.SetDefault(constants.REPORT_BY_ENTRY, true)
+	viper.SetDefault(constants.REPORT_BY_DAY, true)
 
 	// Read the configuration file.
 	err = viper.ReadInConfig()
@@ -169,7 +169,7 @@ func initConfig() {
 	}
 
 	// Dump our some debug information.
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("%s = [%s]\n", constants.WEEK_START, viper.GetString(constants.WEEK_START))
 		log.Printf("%s = [%d]\n", constants.ROUND_TO_MINUTES, viper.GetInt64(constants.ROUND_TO_MINUTES))
 		log.Printf("%s = [%v]\n", constants.SPLIT_WORK_FROM_BREAK_TIME, viper.GetBool(constants.SPLIT_WORK_FROM_BREAK_TIME))

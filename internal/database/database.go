@@ -479,7 +479,7 @@ func (db *Database) UpdateEntry(entry models.Entry) {
 
 	query.WriteString(fmt.Sprintf(" WHERE uid = %d;", entry.Uid))
 
-	if viper.GetBool("debug") {
+	if viper.GetBool(constants.DEBUG) {
 		log.Printf("Query[%s]\n", query.String())
 	}
 
@@ -499,7 +499,7 @@ func (db *Database) UpdateEntry(entry models.Entry) {
 		query.WriteString(fmt.Sprintf(" value = '%s'", task))
 		query.WriteString(fmt.Sprintf(" WHERE entry_uid = %d and name = '%s';", entry.Uid, constants.TASK))
 
-		if viper.GetBool("debug") {
+		if viper.GetBool(constants.DEBUG) {
 			log.Printf("Query[%s]\n", query.String())
 		}
 
@@ -520,7 +520,7 @@ func (db *Database) UpdateEntry(entry models.Entry) {
 		query.WriteString(fmt.Sprintf(" value = '%s'", url))
 		query.WriteString(fmt.Sprintf(" WHERE entry_uid = %d and name = '%s';", entry.Uid, constants.URL))
 
-		if viper.GetBool("debug") {
+		if viper.GetBool(constants.DEBUG) {
 			log.Printf("Query[%s]\n", query.String())
 		}
 
