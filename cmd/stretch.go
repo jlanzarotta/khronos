@@ -33,15 +33,15 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"khronos/constants"
 	"log"
 	"os"
 	"strings"
 	"time"
-	"khronos/constants"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/ijt/go-anytime"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,7 +52,7 @@ import (
 
 // stretchCmd represents the stretch command
 var stretchCmd = &cobra.Command{
-	Use:   "stretch last project",
+	Use:   "stretch last entry",
 	Short: constants.STRETCH_SHORT_DESCRIPTION,
 	Long:  constants.STRETCH_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -88,7 +88,7 @@ func runStretch(cmd *cobra.Command, _ []string) {
 	var entry models.Entry = db.GetLastEntry()
 
 	// Create the prompt.
-	var prompt string = "Would you like to stretch\n" + entry.Dump(true, constants.INDENT_AMOUNT)
+	var prompt string = "Would you like to stretch the last entry\n" + entry.Dump(true, constants.INDENT_AMOUNT)
 	prompt = prompt + "\n\nto " + stretchTime.ToCookieString() + "?"
 
 	// Ask the user if they actually want to stretch the last entry or not.

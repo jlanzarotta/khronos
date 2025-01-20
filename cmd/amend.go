@@ -57,7 +57,7 @@ var amendCmd = &cobra.Command{
 	Use:   "amend",
 	Args:  cobra.MaximumNArgs(1),
 	Short: constants.AMEND_SHORT_DESCRIPTION,
-	Long: constants.AMEND_LONG_DESCRIPTION,
+	Long:  constants.AMEND_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runAmend(cmd, args)
 	},
@@ -92,7 +92,7 @@ func runAmend(cmd *cobra.Command, _ []string) {
 
 			// If nothing was entered, break out of the loop.
 			if n <= 0 {
-				log.Printf("No entry amended.\n")
+				log.Printf("%s\n", color.YellowString("No entry amended."))
 				return
 			}
 
@@ -183,9 +183,9 @@ func runAmend(cmd *cobra.Command, _ []string) {
 
 		db.UpdateEntry(e)
 
-		log.Printf("%s\n", color.GreenString("Last entry amended."))
+		log.Printf("%s\n", color.GreenString("Entry amended."))
 	} else {
-		log.Printf("%s\n", color.YellowString("Last entry not amended."))
+		log.Printf("%s\n", color.YellowString("Entry NOT amended."))
 	}
 }
 
