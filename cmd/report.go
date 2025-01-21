@@ -65,8 +65,8 @@ var exportType = models.ExportTypeCSV
 // reportCmd represents the report command.
 var reportCmd = &cobra.Command{
 	Use:   "report",
-	Short: "Generate a report",
-	Long:  `When you need to generate a report, default today, use this command.`,
+	Short: constants.REPORT_SHORT_DESCRIPTION,
+	Long:  constants.REPORT_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runReport(cmd, args)
 	},
