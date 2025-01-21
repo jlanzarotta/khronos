@@ -37,6 +37,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"strings"
 	"time"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
@@ -54,7 +55,7 @@ var at string
 var helloCmd = &cobra.Command{
 	Use:   "hello",
 	Short: constants.HELLO_SHORT_DESCRIPTION,
-	Long: constants.HELLO_LONG_DESCRIPTION,
+	Long:  constants.HELLO_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runHello(cmd, args)
 	},
@@ -109,6 +110,26 @@ func runHello(cmd *cobra.Command, _ []string) {
 
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToRfc3339String())
+
+	// Get the database.
+	db := database.New(viper.GetString(constants.DATABASE_FILE))
+
+	// Get the last Entry.
+	var lastEntry models.Entry = db.GetLastEntry()
+
+	// Check if the last entry was a HELLO. If is was, was it on the day as this
+	// new entry? If so, reject the new attempt to add a HELLO.
+	if strings.EqualFold(lastEntry.Project, constants.HELLO) {
+		var lastDateTime carbon.Carbon = carbon.Parse(lastEntry.EntryDatetime)
+		var helloDateTime carbon.Carbon = carbon.Parse(entry.EntryDatetime)
+		var diff int64 = lastDateTime.DiffAbsInDays(helloDateTime)
+
+		if diff == 0 {
+			log.Printf("%s\n", color.YellowString("No need to start time tracking for today, as it was already started at "+lastDateTime.String()+"."))
+			return
+		}
+	}
+
 	log.Printf("%s", greetings(helloTime)+" Time tracking has now started.\n")
 
 	if viper.GetBool(constants.DEBUG) {
@@ -116,6 +137,5 @@ func runHello(cmd *cobra.Command, _ []string) {
 	}
 
 	// Write the new Entry to the database.
-	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	db.InsertNewEntry(entry)
 }
