@@ -72,14 +72,14 @@ var reportCmd = &cobra.Command{
 	},
 }
 
-func dashes(input string) string {
+func separator(input string) string {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		log.Fatalf("%s: Error getting terminal dimensions. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 		os.Exit(1)
 	}
 
-	var pad string = strings.Repeat("-", (((width - 2) - len(input)) / 2))
+	var pad string = strings.Repeat("=", (((width - 2) - len(input)) / 2))
 	return (fmt.Sprintf("%s %s %s", pad, input, pad))
 }
 
@@ -195,7 +195,7 @@ func plural(count int, singular string) (result string) {
 func reportByDay(entries []models.Entry) {
 	var show_by_day_totals bool = viper.GetBool(constants.SHOW_BY_DAY_TOTALS)
 	log.Printf("\n")
-	log.Printf("%s\n", dashes(" By Day "))
+	log.Printf("%s\n", separator(" By Day "))
 	log.Printf("\n")
 
 	// Consolidate by day.
@@ -275,7 +275,7 @@ func reportByDay(entries []models.Entry) {
 
 func reportByEntry(entries []models.Entry) {
 	log.Printf("\n")
-	log.Printf("%s\n", dashes(" By Entry "))
+	log.Printf("%s\n", separator(" By Entry "))
 	log.Printf("\n")
 
 	// Create and configure the table.
@@ -313,7 +313,7 @@ func reportByLastEntry() {
 
 func reportByProject(entries []models.Entry) {
 	log.Printf("\n")
-	log.Printf("%s\n", dashes(" By Project "))
+	log.Printf("%s\n", separator(" By Project "))
 	log.Printf("\n")
 
 	// Consolidate by project.
@@ -370,7 +370,7 @@ func reportByProject(entries []models.Entry) {
 
 func reportByTask(entries []models.Entry) {
 	log.Printf("\n")
-	log.Printf("%s\n", dashes(" By Task "))
+	log.Printf("%s\n", separator(" By Task "))
 	log.Printf("\n")
 
 	var consolidateByTask map[string]models.Task = make(map[string]models.Task)
@@ -539,7 +539,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	var startWeek int = start.WeekOfYear()
 	var endWeek int = end.WeekOfYear()
 
-	log.Printf("%s\n", dashes(fmt.Sprintf("%s(%d) to %s(%d)",
+	log.Printf("%s\n", separator(fmt.Sprintf("%s(%d) to %s(%d)",
 		start, startWeek, end, endWeek)))
 
 	// Get the unique UIDs between the specified start and end dates.

@@ -491,7 +491,7 @@ A couple of things you will notice when you run a report is, first, the header.
 
 [source, shell]
 ----
------------- 2024-04-04 00:00:00(14) to 2024-04-04 23:59:59(14) -----------
+============ 2025-01-19 00:00:00(3) to 2025-01-25 23:59:59(4) ============
 ----
 
 The report header tell you that start and end date/time of the report as well as the week number in parentheses.
@@ -511,6 +511,38 @@ If `split_work_from_break_time` is set to `false`, you will get a split _Total T
 ----
 Total Working Time: 3 hours 30 minutes 0 second
 Total Break Time: 15 minutes
+----
+
+==== Configuration
+
+As mentioned previously in the <<Default Configuration>> configuration section, there are options to configure different report sections.
+
+If _by_day: true_, a report by day section is created.
+
+[source, shell]
+----
+==========  By Day  ==========
+----
+
+If _by_entry: true_, a report by entry section is created.
+
+[source, shell]
+----
+==========  By Entry  ==========
+----
+
+If _by_project: true_, a report by project section is created.
+
+[source, shell]
+----
+==========  By Project  ==========
+----
+
+If _by_task: true_, a report by task section is created.
+
+[source, shell]
+----
+=========  By Task  ==========
 ----
 
 ==== Options
