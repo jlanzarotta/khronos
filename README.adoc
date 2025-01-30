@@ -16,6 +16,8 @@ inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.
 
 == Installation
 
+These are the various methods in order to install Khronos on your system.
+
 === Scoop (Windows)
 
 You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khronos` bucket:
@@ -53,7 +55,7 @@ NOTE: For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while 
 .. %USERPROFILE%/.khronos.yaml
 .. $HOME/.khronos.yaml
 . XDG_CONFIG_HOME configuration file
-.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml 
+.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml
 .. $XDG_CONFIG_HOME/khronos/.khronos.yaml
 
 === Default Configuration
