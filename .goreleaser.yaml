@@ -28,7 +28,7 @@ builds:
   - binary:
       khronos
     env:
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
     goos:
       - windows
     goarch:
