@@ -1,5 +1,5 @@
 @echo off
-set CGO_ENABLED=1
+set CGO_ENABLED=0
 set GOOS=windows
 set GOARCH=amd64
 set BUILD_VERSION=1.0.4
