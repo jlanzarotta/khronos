@@ -87,11 +87,11 @@ favorites: <9>
 <1> The database file used by Khronos.  Default is `.khronos.db`.
 <2> If debug type information should be printed to the screen or not.  Default is `false`.
 <3> Indicated which report to run and which ones to not.
-<4> If a note is required when entering a new entry into Khronos.  Default is `false`.
+<4> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
 <5> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
 <6> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
 <7> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
-<8> Indicates if work and break time should be split into seperate values during reports or not.  The default is `false`.
+<8> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
 <9> The list of favorites.
 
 == Natural Language Time
@@ -171,13 +171,15 @@ During an _interactive_ add, your list of favorites are displayed and you can in
 ----
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK
----+-----------------------------
- 0 | general+training
- 1 | general+product development
- 2 | general+personal time
- 3 | general+holiday
- 4 | general+vacation/PTO/Comp
+ # | PROJECT+TASK                | REQUIRE NOTE*
+---+-----------------------------+---------------
+ 0 | general+training            | false
+ 1 | general+product development | false
+ 2 | general+personal time       | false
+ 3 | general+holiday             | false
+ 4 | general+vacation/PTO/Comp   | false
+
+* May be overridden by global configuration setting
 
 Please enter the number of the favorite; otherwise, [Return] to quit. > 0
 ----
@@ -282,7 +284,7 @@ favorites:
 
 ==== url
 
-An optional URL can be added to a favorite.  This URL will show up on various commands and reports.  This URL can be uses to a link to JIRA or any website you need to have linked to favorite.
+An optional URL can be added to a favorite. This URL will show up on various commands and reports. This URL can be uses to a link to JIRA or any website you need to have linked to favorite.
 
 Here is an example:
 
@@ -300,6 +302,22 @@ favorites:
 .
 .
 ----
+
+==== require_note
+
+An optional `required_note` can be added to a favorite. This flag tells Khronos that you want to require the prompting of a note for this specific favorite.
+
+IMPORTANT: If the global `require_note` option is set to `true`, no matter what value you set on a favorite's `required_note`, a note will be required.
+
+ # | PROJECT+TASK                | REQUIRE NOTE*
+---+-----------------------------+---------------
+ 0 | general+training            | true
+ 1 | general+product development | false
+ 2 | general+personal time       | false
+ 3 | general+holiday             | false
+ 4 | general+vacation/PTO/Comp   | false
+
+* May be overridden by global configuration setting
 
 === amend
 
@@ -441,13 +459,15 @@ The `favorites` command tells Khronos that you would like to show all your curre
 $ k show --favorites
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK
----+-----------------------------
- 0 | general+training
- 1 | general+product development
- 2 | general+personal time
- 3 | general+holiday
- 4 | general+vacation/PTO/Comp
+ # | PROJECT+TASK                | REQUIRE NOTE*
+---+-----------------------------+---------------
+ 0 | general+training            | false
+ 1 | general+product development | false
+ 2 | general+personal time       | false
+ 3 | general+holiday             | false
+ 4 | general+vacation/PTO/Comp   | false
+
+* May be overridden by global configuration setting
 ----
 
 If one or more of your favorites have an associated URL, your favorites will be shown like this:
@@ -457,13 +477,33 @@ If one or more of your favorites have an associated URL, your favorites will be 
 $ k show --favorites
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK                | URL
----+-----------------------------+-------------------------------------------------
- 0 | general+training            | https://yoursite.com/url1
- 1 | general+product development | https://yoursite.com/url2
- 2 | general+personal time       |
- 3 | general+holiday             |
- 4 | general+vacation/PTO/Comp   |
+ # | PROJECT+TASK                | URL                       | REQUIRE NOTE*
+---+-----------------------------+---------------------------+---------------
+ 0 | general+training            | https://yoursite.com/url1 | false
+ 1 | general+product development | https://yoursite.com/url2 | false
+ 2 | general+personal time       |                           | false
+ 3 | general+holiday             |                           | false
+ 4 | general+vacation/PTO/Comp   |                           | false
+
+* May be overridden by global configuration setting
+----
+
+If one or more of your favorites have an associated description, your favorites will be shown like this:
+
+[source, shell]
+----
+$ k show --favorites
+Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
+
+ # | PROJECT+TASK                | DESCRIPTION | URL                       | REQUIRE NOTE*
+---+-----------------------------+-------------+---------------------------+---------------
+ 0 | general+training            | Training    | https://yoursite.com/url1 | false
+ 1 | general+product development |             | https://yoursite.com/url2 | false
+ 2 | general+personal time       |             |                           | false
+ 3 | general+holiday             |             |                           | false
+ 4 | general+vacation/PTO/Comp   |             |                           | false
+
+* May be overridden by global configuration setting
 ----
 
 ==== statistics

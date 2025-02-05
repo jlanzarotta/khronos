@@ -33,16 +33,16 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"khronos/constants"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"khronos/constants"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/ijt/go-anytime"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -57,7 +57,7 @@ var addCmd = &cobra.Command{
 	Use:   "add [project+task...]",
 	Args:  cobra.MaximumNArgs(1),
 	Short: constants.ADD_SHORT_DESCRIPTION,
-	Long: constants.ADD_LONG_DESCRIPTION,
+	Long:  constants.ADD_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runAdd(cmd, args)
 	},
@@ -140,6 +140,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 	var projectTask string = constants.EMPTY
 	var url string = constants.EMPTY
+	var requiredNote bool = false
 
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
 
@@ -184,6 +185,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 				var fav Favorite = getFavorite(i)
 				projectTask = fav.Favorite
 				url = fav.URL
+				requiredNote = fav.RequireNote
 				break
 			}
 		}
@@ -196,11 +198,12 @@ func runAdd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// Check if the note was empty and the require_note flag is set.  If so, require the note.
+	// Check if the note was empty and the require_note flag is globally set or
+	// set on the favorite.  If so, require the note.
 	if stringUtils.IsEmpty(note) {
-		var required bool = viper.GetBool(constants.REQUIRE_NOTE)
-		if required {
-			note = promptForNote(required)
+		var globalRequired bool = viper.GetBool(constants.REQUIRE_NOTE)
+		if globalRequired || requiredNote {
+			note = promptForNote(true)
 
 			// If the note is still empty, this is an indicator that the user wants to exit.
 			if len(note) <= 0 {

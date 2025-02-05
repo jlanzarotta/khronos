@@ -71,6 +71,7 @@ type Favorite struct {
 	Favorite    string `yaml:"favorite"`
 	Description string `yaml:"description"`
 	URL         string `yaml:"url"`
+	RequireNote bool `default:"false" yaml:"require_note"`
 }
 
 func init() {
@@ -135,28 +136,29 @@ func showFavorites() {
 
 	t.Style().Options.DrawBorder = false
 	if descriptionFound && urlFound {
-		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL})
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else if descriptionFound {
-		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION})
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else if urlFound {
-		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.URL})
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else {
-		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK})
+		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	}
 
 	for i, f := range config.Favorites {
 		if descriptionFound && urlFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.URL})
+			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.URL, f.RequireNote})
 		} else if descriptionFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.Description})
+			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.RequireNote})
 		} else if urlFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.URL})
+			t.AppendRow(table.Row{i, f.Favorite, f.URL, f.RequireNote})
 		} else {
-			t.AppendRow(table.Row{i, f.Favorite})
+			t.AppendRow(table.Row{i, f.Favorite, f.RequireNote})
 		}
 	}
 
 	log.Println(t.Render())
+	log.Printf("\n%s\n", constants.MAY_BE_OVERRIDDEN_BY_GLOBAL_CONFIGURATION_SETTING)
 }
 
 func showStatistics() {
