@@ -66,17 +66,19 @@ The default Microsoft Windows(R) Khronos configuration is as follows.  These con
 ----
 database_file: %USERPROFILE%\.khronos.db <1>
 debug: false <2>
-report: <3>
+display_by_day_totals: true <3>
+display_time_in_24h_format: false <4>
+report: <5>
     by_day: true
     by_entry: true
     by_project: true
     by_task: true
-require_note: false <4>
-round_to_minutes: 15 <5>
-week_start: Sunday <6>
-show_by_day_totals: true <7>
-split_work_from_break_time: false <8>
-favorites: <9>
+require_note: false <6>
+round_to_minutes: 15 <7>
+week_start: Sunday <8>
+show_by_day_totals: true <9>
+split_work_from_break_time: false <10>
+favorites: <11>
   - favorite: general+training
   - favorite: general+product development
   - favorite: general+personal time
@@ -86,13 +88,15 @@ favorites: <9>
 
 <1> The database file used by Khronos.  Default is `.khronos.db`.
 <2> If debug type information should be printed to the screen or not.  Default is `false`.
-<3> Indicated which report to run and which ones to not.
-<4> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
-<5> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
-<6> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
-<7> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
-<8> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
-<9> The list of favorites.
+<3> If day totals should be displayed on the reports or not. Default is `true`.
+<4> If time should be displayed in 24 hour format or not. Default is `false`.
+<5> Indicated which report to run and which ones to not.
+<6> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
+<7> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
+<8> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
+<9> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
+<10> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
+<11> The list of favorites.
 
 == Natural Language Time
 

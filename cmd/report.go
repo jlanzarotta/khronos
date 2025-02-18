@@ -59,8 +59,8 @@ var daysOfWeek = map[string]string{}
 var roundToMinutes int64
 var exportFilename string = constants.EMPTY
 var _cmd *cobra.Command
-
 var exportType = models.ExportTypeCSV
+var startEndTimeFormat string = constants.CARBON_START_END_TIME_FORMAT
 
 // reportCmd represents the report command.
 var reportCmd = &cobra.Command{
@@ -193,7 +193,7 @@ func plural(count int, singular string) (result string) {
 }
 
 func reportByDay(entries []models.Entry) {
-	var show_by_day_totals bool = viper.GetBool(constants.SHOW_BY_DAY_TOTALS)
+	var display_by_day_totals bool = viper.GetBool(constants.DISPLAY_BY_DAY_TOTALS)
 	log.Printf("\n")
 	log.Printf("%s\n", separator(" By Day "))
 	log.Printf("\n")
@@ -259,7 +259,7 @@ func reportByDay(entries []models.Entry) {
 			totalPerDay += round(v.Duration)
 		}
 
-		if show_by_day_totals {
+		if display_by_day_totals {
 			t.AppendSeparator()
 			t.AppendRow(table.Row{constants.EMPTY, constants.EMPTY, constants.TOTAL, secondsToHuman(totalPerDay, true)})
 			t.AppendSeparator()
@@ -286,7 +286,7 @@ func reportByEntry(entries []models.Entry) {
 	for _, entry := range entries {
 		t.AppendRow(table.Row{
 			carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT),
-			carbon.Parse(entry.EntryDatetime).SubSeconds(int(entry.Duration)).Format(constants.CARBON_START_END_TIME_FORMAT) + " to " + carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_START_END_TIME_FORMAT),
+			carbon.Parse(entry.EntryDatetime).SubSeconds(int(entry.Duration)).Format(startEndTimeFormat) + " to " + carbon.Parse(entry.EntryDatetime).Format(startEndTimeFormat),
 			secondsToHuman(round(entry.Duration), true),
 			entry.Project,
 			entry.GetTasksAsString(),
@@ -673,6 +673,11 @@ func runReport(cmd *cobra.Command, _ []string) {
 				index, entry.Uid, entry.Project, entry.Note, entry.EntryDatetime, entry.GetPropertiesAsString(), entry.Duration,
 				secondsToHuman(entry.Duration, true))
 		}
+	}
+
+	// Check iff the user wants 24h formatted time.
+	if viper.GetBool(constants.DISPLAY_TIME_IN_24H_FORMAT) {
+		startEndTimeFormat = constants.CARBON_START_END_TIME_24H_FORMAT
 	}
 
 	// Replace our existing collection of entries with our new collection.

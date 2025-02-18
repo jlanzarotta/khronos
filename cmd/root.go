@@ -129,30 +129,33 @@ func initConfig() {
 	// Set default database.
 	viper.SetDefault(constants.DATABASE_FILE, filepath.Join(home, ".khronos.db"))
 
-	// Round to 15 minute intervals by default.
-	viper.SetDefault(constants.ROUND_TO_MINUTES, 15)
-
-	// Require a note.
-	viper.SetDefault(constants.REQUIRE_NOTE, false)
-
-	// Set day of the week when determining start of the week.
-	viper.SetDefault(constants.WEEK_START, "Sunday")
-
 	// Set debug to false.
 	viper.SetDefault(constants.DEBUG, false)
 
-	// Set flag indicating if work and break time should be spit into separate values during reports.
-	viper.SetDefault(constants.SPLIT_WORK_FROM_BREAK_TIME, false)
-
 	// Should a daily total be shown for each day when rendering the "by day"
 	// report.
-	viper.SetDefault(constants.SHOW_BY_DAY_TOTALS, true)
+	viper.SetDefault(constants.DISPLAY_BY_DAY_TOTALS, true)
+
+	// Set 24h time format to false.
+	viper.SetDefault(constants.DISPLAY_TIME_IN_24H_FORMAT, false)
 
 	// Set each of the reports to true.
 	viper.SetDefault(constants.REPORT_BY_PROJECT, true)
 	viper.SetDefault(constants.REPORT_BY_TASK, true)
 	viper.SetDefault(constants.REPORT_BY_ENTRY, true)
 	viper.SetDefault(constants.REPORT_BY_DAY, true)
+
+	// Require a note.
+	viper.SetDefault(constants.REQUIRE_NOTE, false)
+
+	// Round to 15 minute intervals by default.
+	viper.SetDefault(constants.ROUND_TO_MINUTES, 15)
+
+	// Set flag indicating if work and break time should be spit into separate values during reports.
+	viper.SetDefault(constants.SPLIT_WORK_FROM_BREAK_TIME, false)
+
+	// Set day of the week when determining start of the week.
+	viper.SetDefault(constants.WEEK_START, "Sunday")
 
 	// Read the configuration file.
 	err = viper.ReadInConfig()
