@@ -30,10 +30,11 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 package constants
 
+const ARCHIVE string = "archive"
+const ARCHIVE_DESCRIPTION = "Archive all nuked entries."
 const ADD_LONG_DESCRIPTION = "Once you have completed a entry (project+task), use this command to add that newly completed task to the database with an optional note."
 const ADD_SHORT_DESCRIPTION = "Add a completed entry"
 const ADDING string = "Adding"
-const ALL string = "all"
 const AMEND_LONG_DESCRIPTION = "Amend is a convenient way to modify an entry, default is the last entry. It lets you modify the project, task, and/or datetime."
 const AMEND_SHORT_DESCRIPTION = "Amend an entry"
 const AMENDING string = "Amending"
@@ -61,6 +62,7 @@ const DESCRIPTION = "description"
 const DISPLAY_BY_DAY_TOTALS string = "display_by_day_totals"
 const DISPLAY_TIME_IN_24H_FORMAT = "display_time_in_24h_format"
 const DRY_RUN = "dry-run"
+const DRY_RUN_DESCRIPTION = "Do not actually nuke anything, but show what potential would be nuked."
 const DURATION_NORMAL_CASE = "Duration"
 const EDIT_LONG_DESCRIPTION = "Open the Khronos configuration file in your default editor."
 const EDIT_SHORT_DESCRIPTION = "Open the Khronos configuration file in your default editor"
@@ -89,6 +91,8 @@ const NATURAL_LANGUAGE_DESCRIPTION string = "Natural Language Time, e.g., '18 mi
 const NOTE string = "note"
 const NOTE_DESCRIPTION string = "A note associated with this entry"
 const NOTE_NORMAL_CASE = "Note"
+const NUKE_ALL string = "all"
+const NUKE_ALL_DESCRIPTION string = "Nuke ALL entries.  Use with extreme caution!!!"
 const NUKE_LONG_DESCRIPTION = "As you continuously add completed entries, the database continues to grow unbounded. The nuke command allows you to manage the size of your database."
 const NUKE_SHORT_DESCRIPTION = "Nukes entries from the sqlite database"
 const PRINT_DATE_WIDTH int = 10
@@ -98,6 +102,7 @@ const PRINT_PROJECT_WIDTH int = 20
 const PRINT_START_END_WIDTH int = 20
 const PRINT_TASK_WIDTH int = 20
 const PRIOR_YEARS string = "prior-years"
+const PRIOR_YEARS_DESCRIPTION string = "Nuke all entries prior to the current year's entries."
 const PROJECT string = "project"
 const PROJECT_NORMAL_CASE = "Project"
 const PROJECT_TASK = "project+task"

@@ -57,16 +57,18 @@ var nukeCmd = &cobra.Command{
 }
 
 func init() {
-	nukeCmd.Flags().BoolP(constants.ALL, constants.EMPTY, false, "Nuke ALL entries.  Use with extreme caution!!!")
-	nukeCmd.Flags().BoolP(constants.PRIOR_YEARS, constants.EMPTY, false, "Nuke all entries prior to the current year's entries.")
-	nukeCmd.Flags().BoolP(constants.DRY_RUN, constants.EMPTY, false, "Do not actually nuke anything, but show what potential would be nuked.")
+	nukeCmd.Flags().BoolP(constants.NUKE_ALL, constants.EMPTY, false, constants.NUKE_ALL_DESCRIPTION)
+	nukeCmd.Flags().BoolP(constants.PRIOR_YEARS, constants.EMPTY, false, constants.PRIOR_YEARS_DESCRIPTION)
+	nukeCmd.Flags().BoolP(constants.DRY_RUN, constants.EMPTY, false, constants.DRY_RUN_DESCRIPTION)
+	nukeCmd.Flags().BoolP(constants.ARCHIVE, constants.EMPTY, false, constants.ARCHIVE_DESCRIPTION)
 	rootCmd.AddCommand(nukeCmd)
 }
 
 func runNuke(cmd *cobra.Command, _ []string) {
-	all, _ := cmd.Flags().GetBool(constants.ALL)
+	all, _ := cmd.Flags().GetBool(constants.NUKE_ALL)
 	priorYears, _ := cmd.Flags().GetBool(constants.PRIOR_YEARS)
 	dryRun, _ := cmd.Flags().GetBool(constants.DRY_RUN)
+	archive, _ := cmd.Flags().GetBool(constants.ARCHIVE)
 
 	if all {
 		yesNo := yesNoPrompt("Are you sure you want to nuke ALL the entries from your database?")
@@ -77,7 +79,7 @@ func runNuke(cmd *cobra.Command, _ []string) {
 				if yesNo {
 					// Yes was enter, so nuke ALL entries.
 					db := database.New(viper.GetString(constants.DATABASE_FILE))
-					var count = db.NukeAllEntries(dryRun)
+					var count = db.NukeAllEntries(dryRun, archive)
 					showExplosion()
 					if dryRun {
 						log.Printf("%s\n", color.HiBlueString("All %d entries would have been nuked.", count))
@@ -105,7 +107,7 @@ func runNuke(cmd *cobra.Command, _ []string) {
 				yesNo = yesNoPrompt(prompt)
 				if yesNo {
 					db := database.New(viper.GetString(constants.DATABASE_FILE))
-					var count = db.NukePriorYearsEntries(dryRun, year)
+					var count = db.NukePriorYearsEntries(dryRun, year, archive)
 					showExplosion()
 					if dryRun {
 						log.Printf("%s\n", color.YellowString("All %d entries prior to %d would have been nuked.\n", count, year))

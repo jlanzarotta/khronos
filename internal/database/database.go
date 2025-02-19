@@ -41,8 +41,8 @@ import (
 	"khronos/constants"
 	"khronos/internal/models"
 
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 )
@@ -369,12 +369,83 @@ func (db *Database) GetCountEntries() int64 {
 	return count
 }
 
-func (db *Database) NukePriorYearsEntries(dryRun bool, year int) int64 {
+func CreateArchiveFile(entryWithProperty []EntryWithProperty) {
+	// Create our unique archive file.
+	archiveFile, err := os.Create(constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now().ToShortDateTimeString() + ".csv")
+	if err != nil {
+		log.Fatalf("%s: Error trying to create archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	defer archiveFile.Close()
+
+	_, err = archiveFile.WriteString("uid,project,note,entry_date_time,name,value\n")
+	if err != nil {
+		log.Fatalf("%s: Error writing to archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	// Write each record to the archive file.
+	for _, ewp := range entryWithProperty {
+		_, err = archiveFile.WriteString(fmt.Sprintf("%d, %s, %s, %s, %s, %s\n", ewp.Uid, ewp.Project, ewp.Note.String, ewp.EntryDatetime, ewp.Name.String, ewp.Value.String))
+		if err != nil {
+			log.Fatalf("%s: Error writing to archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// Flush the archive file to disk so it can be closed.
+	archiveFile.Sync()
+}
+
+func (db *Database) NukePriorYearsEntries(dryRun bool, year int, archive bool) int64 {
 	var count int64 = 0
 	var query strings.Builder
 
 	if !dryRun {
-		query.WriteString(fmt.Sprintf("%s != '%d';", "DELETE FROM entry WHERE strftime('%Y', entry_datetime)", year))
+		var archiveRecords = []EntryWithProperty{}
+		var uuids string = constants.EMPTY
+		var s string = fmt.Sprintf("%s != '%d';", "SELECT e.uid, e.project, e.note, e.entry_datetime, p.name, p.value FROM entry e JOIN property p ON p.entry_uid = e.uid WHERE strftime('%Y', e.entry_datetime)", year)
+		results, err := db.Conn.Query(s)
+		if err != nil {
+			log.Fatalf("%s: Error trying to retrieve Entry records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		// Loop over our results.
+		var lastUid int64 = -1
+		for results.Next() {
+			var ewp EntryWithProperty
+			err = results.Scan(&ewp.Uid, &ewp.Project, &ewp.Note, &ewp.EntryDatetime, &ewp.Name, &ewp.Value)
+			if err != nil {
+				log.Fatalf("%s: Error trying to Scan EntriesWithProperty results into data structure. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+				os.Exit(1)
+			}
+
+			// Save the uid of the record being deleted.
+			if strings.EqualFold(uuids, constants.EMPTY) {
+				uuids = fmt.Sprintf("%d", ewp.Uid)
+			} else {
+				if lastUid != ewp.Uid {
+					uuids = fmt.Sprintf("%s, %d", uuids, ewp.Uid)
+				}
+			}
+			lastUid = ewp.Uid
+
+			// If the user wants an archive of the records being deleted, save
+			// the information in a collection.
+			if archive {
+				archiveRecords = append(archiveRecords, ewp)
+			}
+		}
+
+		results.Close()
+
+		// If the user wants an archive, write the archived collection to a
+		// file.
+		if archive {
+			CreateArchiveFile(archiveRecords)
+		}
 
 		// Create a transaction.
 		tx, err := db.Conn.BeginTx(db.Context, nil)
@@ -384,12 +455,23 @@ func (db *Database) NukePriorYearsEntries(dryRun bool, year int) int64 {
 		}
 
 		// Via the transaction, delete all the entry and associated property records.
+		query.WriteString(fmt.Sprintf("DELETE FROM entry WHERE uid IN (%s)", uuids))
 		_, err = tx.ExecContext(db.Context, query.String())
 		if err != nil {
-			log.Fatalf("%s: Error trying to delete all entry before %d. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), year, err.Error())
+			log.Fatalf("%s: Error trying to delete all entry records prior to %d. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), year, err.Error())
 			tx.Rollback()
 			os.Exit(1)
 		} else {
+			query.Reset()
+			query.WriteString(fmt.Sprintf("DELETE FROM property WHERE entry_uid IN (%s)", uuids))
+			_, err = tx.ExecContext(db.Context, query.String())
+			if err != nil {
+				log.Fatalf("%s: Error trying to delete all property records prior to %d. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), year, err.Error())
+				tx.Rollback()
+				os.Exit(1)
+			}
+
+			// Commit our changes to the database.
 			err = tx.Commit()
 			if err != nil {
 				log.Fatalf("%s: Error committing transaction. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
@@ -417,10 +499,40 @@ func (db *Database) NukePriorYearsEntries(dryRun bool, year int) int64 {
 	return count
 }
 
-func (db *Database) NukeAllEntries(dryRun bool) int64 {
+func (db *Database) NukeAllEntries(dryRun bool, archive bool) int64 {
 	var count int64 = 0
 
 	if !dryRun {
+		var archiveRecords = []EntryWithProperty{}
+		var s string = "SELECT e.uid, e.project, e.note, e.entry_datetime, p.name, p.value FROM entry e JOIN property p ON p.entry_uid = e.uid ORDER BY e.uid"
+		results, err := db.Conn.Query(s)
+		if err != nil {
+			log.Fatalf("%s: Error trying to retrieve Entry records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		// Loop over our results.
+		for results.Next() {
+			var ewp EntryWithProperty
+			err = results.Scan(&ewp.Uid, &ewp.Project, &ewp.Note, &ewp.EntryDatetime, &ewp.Name, &ewp.Value)
+			if err != nil {
+				log.Fatalf("%s: Error trying to Scan EntriesWithProperty results into data structure. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+				os.Exit(1)
+			}
+
+			// If the user wants an archive of the records being deleted, save
+			// the information in a collection.
+			if archive {
+				archiveRecords = append(archiveRecords, ewp)
+			}
+		}
+
+		// If the user wants an archive, write the archived collection to a
+		// file.
+		if archive {
+			CreateArchiveFile(archiveRecords)
+		}
+
 		// Create a transaction.
 		tx, err := db.Conn.BeginTx(db.Context, nil)
 		if err != nil {
@@ -435,10 +547,17 @@ func (db *Database) NukeAllEntries(dryRun bool) int64 {
 			tx.Rollback()
 			os.Exit(1)
 		} else {
-			err = tx.Commit()
+			_, err = tx.ExecContext(db.Context, "DELETE FROM property;")
 			if err != nil {
-				log.Fatalf("%s: Error committing transaction. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+				log.Fatalf("%s: Error trying to delete all property records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+				tx.Rollback()
 				os.Exit(1)
+			} else {
+				err = tx.Commit()
+				if err != nil {
+					log.Fatalf("%s: Error committing transaction. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+					os.Exit(1)
+				}
 			}
 		}
 	} else {

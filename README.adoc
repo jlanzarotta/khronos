@@ -439,7 +439,7 @@ All entries prior to 2024 have been nuked.
 
 ==== dry-run
 
-The `dry-run` command tells Khronos that you do not really want anything nuked.  But instead just report on how many entries would have been nuked.
+The `dry-run` option tells Khronos that you do not really want anything nuked.  But instead just report on how many entries would have been nuked.
 
 [source, shell]
 ----
@@ -450,13 +450,29 @@ LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from y
 All 639 entries would have been nuked.
 ----
 
+==== archive
+
+The `archive` options tells Khronos that you would like to archive the entries that are nuked from your database. The nuked records are written to a _khronos_archive_yyyymmddhhmmss.csv_ file.
+
+[source, shell]
+----
+$k nuke --all --archive
+Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+All 639 entries would have been nuked.
+
+$ls -l
+.a---  58 KB Tue 2025-02-18 08:25:48 PM . khronos_archive_20250218202548.csv
+----
+
 === show
 
-The `show` command tells Khronos you would like to show various information.
+The `show` option tells Khronos you would like to show various information.
 
 ==== favorites
 
-The `favorites` command tells Khronos that you would like to show all your currently configured favorites that are stored in the _.khronos.yaml_ file which is located in the installation directory.
+The `favorites` option tells Khronos that you would like to show all your currently configured favorites that are stored in the _.khronos.yaml_ file which is located in the installation directory.
 
 [source, shell]
 ----
