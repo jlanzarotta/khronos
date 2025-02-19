@@ -452,7 +452,7 @@ All 639 entries would have been nuked.
 
 ==== archive
 
-The `archive` options tells Khronos that you would like to archive the entries that are nuked from your database. The nuked records are written to a _khronos_archive_yyyymmddhhmmss.csv_ file.
+The `archive` option tells Khronos that you would like to archive the entries that are nuked from your database. The nuked records are written to a _khronos_archive_yyyymmddhhmmss.csv_ file.
 
 [source, shell]
 ----
@@ -464,6 +464,21 @@ All 639 entries would have been nuked.
 
 $ls -l
 .a---  58 KB Tue 2025-02-18 08:25:48 PM . khronos_archive_20250218202548.csv
+----
+
+==== compress
+
+The `compress` option tells Khronos that you would like to have the archive file automatically compressed. The compression format is _gzip_ and the compressed file will be named _khronos_archive_yyyymmddhhmmss.csv.gz_.
+
+----
+$k nuke --all --archive --compress
+Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
+All 639 entries would have been nuked.
+
+$ls -l
+.a---  58 KB Tue 2025-02-18 08:25:48 PM . khronos_archive_20250218202548.csv.gz
 ----
 
 === show

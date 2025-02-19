@@ -31,9 +31,11 @@ POSSIBILITY OF SUCH DAMAGE.
 package database
 
 import (
+	"compress/gzip"
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -369,14 +371,14 @@ func (db *Database) GetCountEntries() int64 {
 	return count
 }
 
-func CreateArchiveFile(entryWithProperty []EntryWithProperty) {
+func CreateArchiveFile(entryWithProperty []EntryWithProperty, compress bool) {
 	// Create our unique archive file.
-	archiveFile, err := os.Create(constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now().ToShortDateTimeString() + ".csv")
+	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now().ToShortDateTimeString()
+	archiveFile, err := os.Create(filename + ".csv")
 	if err != nil {
 		log.Fatalf("%s: Error trying to create archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 		os.Exit(1)
 	}
-
 	defer archiveFile.Close()
 
 	_, err = archiveFile.WriteString("uid,project,note,entry_date_time,name,value\n")
@@ -396,9 +398,50 @@ func CreateArchiveFile(entryWithProperty []EntryWithProperty) {
 
 	// Flush the archive file to disk so it can be closed.
 	archiveFile.Sync()
+	archiveFile.Close()
+
+	if compress {
+		// Open the original archive file.
+		originalFile, err := os.Open(filename + ".csv")
+		if err != nil {
+			log.Fatalf("%s: Error opening original archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+		defer originalFile.Close()
+
+		// Create a new gzipped file.
+		gzippedFile, err := os.Create(filename + ".csv.gz")
+		if err != nil {
+			log.Fatalf("%s: Error creating gzip file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+		defer gzippedFile.Close()
+
+		// Create a new gzip writer.
+		gzipWriter := gzip.NewWriter(gzippedFile)
+		defer gzipWriter.Close()
+
+		// Copy the contents of the original file to the gzip writer.
+		_, err = io.Copy(gzipWriter, originalFile)
+		if err != nil {
+			log.Fatalf("%s: Error writing to gzip file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		// Flush the gzip writer to ensure all data is written.
+		gzipWriter.Flush()
+
+		// Delete the original archive file.
+		originalFile.Close()
+		err = os.Remove(filename + ".csv")
+		if err != nil {
+			log.Fatalf("%s: Error deleting original archive file after compressing. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+	}
 }
 
-func (db *Database) NukePriorYearsEntries(dryRun bool, year int, archive bool) int64 {
+func (db *Database) NukePriorYearsEntries(dryRun bool, year int, archive bool, compress bool) int64 {
 	var count int64 = 0
 	var query strings.Builder
 
@@ -444,7 +487,7 @@ func (db *Database) NukePriorYearsEntries(dryRun bool, year int, archive bool) i
 		// If the user wants an archive, write the archived collection to a
 		// file.
 		if archive {
-			CreateArchiveFile(archiveRecords)
+			CreateArchiveFile(archiveRecords, compress)
 		}
 
 		// Create a transaction.
@@ -499,7 +542,7 @@ func (db *Database) NukePriorYearsEntries(dryRun bool, year int, archive bool) i
 	return count
 }
 
-func (db *Database) NukeAllEntries(dryRun bool, archive bool) int64 {
+func (db *Database) NukeAllEntries(dryRun bool, archive bool, compress bool) int64 {
 	var count int64 = 0
 
 	if !dryRun {
@@ -530,7 +573,7 @@ func (db *Database) NukeAllEntries(dryRun bool, archive bool) int64 {
 		// If the user wants an archive, write the archived collection to a
 		// file.
 		if archive {
-			CreateArchiveFile(archiveRecords)
+			CreateArchiveFile(archiveRecords, compress)
 		}
 
 		// Create a transaction.
