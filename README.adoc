@@ -228,7 +228,7 @@ $ k add khronos+programming+documentation
 
 ==== note
 
-The `--note` command tells Khronos that you would like to add a note associated with your new entry.
+The `--note` option tells Khronos that you would like to add a note associated with your new entry.
 
 [source, shell]
 ----
@@ -237,7 +237,7 @@ $ k add khronos+programming --note "I love programming."
 
 ==== favorite
 
-The `--favorite` flag tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
+The `--favorite` option tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
 
 NOTE: Favorites are zero (0) based.
 
@@ -387,7 +387,7 @@ The previous command tells Khronos that you just finished your lunch break.
 
 ==== note
 
-The `note` command tells Khronos that you would like to add a note associated with your new break.
+The `note` option tells Khronos that you would like to add a note associated with your new break.
 
 [source, shell]
 ----
@@ -409,7 +409,7 @@ Over time as you enter new entries into the database, the database will naturall
 
 ==== all
 
-The `all` command tells Khronos that you would like to nukes ALL entries from the database.  This includes the current years.
+The `all` option tells Khronos that you would like to nukes ALL entries from the database.  This includes the current years.
 
 WARNING: Use this extreme caution as ALL entries will be nuked.  You are given ample warning before your entries are actually nuked.  YOU HAVE BEEN WARNED.
 
@@ -424,7 +424,7 @@ All entries nuked.
 
 ==== prior-years
 
-The `prior-years` command tells Khronos that you would like to nuke all entries prior to the current year.  So in other words, if you were tracking the past 5 years worth of entries in your database, and you issued the `prior-years` command, the past 4 years worth of entries would be nuked from the database, leaving just the current year.
+The `prior-years` option tells Khronos that you would like to nuke all entries prior to the current year.  So in other words, if you were tracking the past 5 years worth of entries in your database, and you issued the `prior-years` command, the past 4 years worth of entries would be nuked from the database, leaving just the current year.
 
 NOTE: You are given ample warning before your entries are actually nuked...
 
@@ -468,7 +468,7 @@ $ls -l
 
 === show
 
-The `show` option tells Khronos you would like to show various information.
+The `show` command tells Khronos you would like to show various information.
 
 ==== favorites
 
@@ -528,7 +528,7 @@ Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
 ==== statistics
 
-The `statistics` command tells Khronos that you would like to show some statistics related to the entries you have entered into the database.
+The `statistics` option tells Khronos that you would like to show some statistics related to the entries you have entered into the database.
 
 [source, shell]
 ----
@@ -685,9 +685,7 @@ $ k report --date 2024-10-11
 
 ===== --no-rounding
 
-By specifying the option `--no-rounding`, this tells Khronos you would the all
-the duration to be their original, unrounded values.  This option is good it you
-have durations that are less than the value you have configured for rounding.
+By specifying the option `--no-rounding`, this tells Khronos you would the all the duration to be their original, unrounded values.  This option is good it you have durations that are less than the value you have configured for rounding.
 
 [source, shell]
 ----
@@ -710,7 +708,7 @@ These commands will create a unique report file with the extension associated wi
 
 === stretch
 
-Stretches the last entry to the current or specified date/time.
+The `stretch` stretches the last entry to the current or specified date/time.
 
 In the below example, the latest entry to 05-Dec-2023...  Khronos will as you if you want to perform the stretch or not.  If you enter (y or Yes), the latest entry is stretched.  If you enter (n/No), the latest entry is not stretched.
 
@@ -723,7 +721,7 @@ Last entry was stretched.
 
 === web
 
-Opens the Khronos website in your default web browser.
+The `web` command opens the Khronos website in your default web browser.
 
 [source, shell]
 ----
