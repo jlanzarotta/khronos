@@ -80,7 +80,7 @@ func init() {
 	re := regexp.MustCompile(`(?m)^Flags:\s*$`)
 	usageTemplate = re.ReplaceAllLiteralString(usageTemplate, `{{StyleHeading "Flags:"}}`)
 	rootCmd.SetUsageTemplate(usageTemplate)
-	rootCmd.SetOutput(color.Output)
+	rootCmd.SetOut(color.Output)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -103,9 +103,6 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Add the user's home directory to the search path.
-		viper.AddConfigPath(home)
-
 		// Add the XDG_CONFIG_HOME directory to the search path, if configured.
 		xdgConfigHome, found := os.LookupEnv("XDG_CONFIG_HOME")
 		if found {
@@ -117,6 +114,9 @@ func initConfig() {
 				viper.AddConfigPath(xdgConfigPath)
 			}
 		}
+
+		// Add the user's home directory to the search path.
+		viper.AddConfigPath(home)
 
 		// Add the Khronos configuration file and extension type.
 		viper.SetConfigType("yaml")
@@ -163,10 +163,13 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// No config file, just use defaults.
 			viper.SafeWriteConfig()
-			writeDefaultFavorites(home)
-			log.Printf("Unable to load config file, using/writing default values to [%s].\n", viper.ConfigFileUsed())
+			//writeDefaultFavorites(home)
+			writeDefaultFavorites(viper.ConfigFileUsed())
+			log.Printf("%s: Unable to load config file, using/writing default values to [%s].\n\n",
+				color.HiBlueString(constants.INFO_NORMAL_CASE), viper.ConfigFileUsed())
 		} else {
-			log.Fatalf("%s: Error reading config file: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			log.Fatalf("%s: Error reading config file: %s\n",
+				color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 			os.Exit(1)
 		}
 	}

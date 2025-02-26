@@ -47,16 +47,19 @@ To install Khronos, simply unzip the archive for your specific operating system 
 
 When Khronos starts up, it checks to make sure there is a default configuration file.  If it does not exist, it is automatically created for you.
 
+NOTE: Khronos support the use of the _XDG Base Directory Specification_. For more information https://specifications.freedesktop.org/basedir-spec/latest/
+
 Khronos uses the following precedence order when determining where the configuration file is located. Each item listed, takes precedence over the item below it:
 
-NOTE: For Microsoft Windows(R), the default directory is `%USERPROFILE%`, while under Unix (FreeBSD(R), Linux, macOS(R), etc.) the directory is `$HOME`.
-
-. per-user configuration file
-.. %USERPROFILE%/.khronos.yaml
-.. $HOME/.khronos.yaml
-. XDG_CONFIG_HOME configuration file
-.. %XDG_CONFIG_HOME%/khronos/.khronos.yaml
-.. $XDG_CONFIG_HOME/khronos/.khronos.yaml
+[cols="1,1a"]
+|===
+|Microsoft Windows(R)
+|. %XDG_CONFIG_HOME%/khronos/.khronos.yaml
+. %USERPROFILE%/.khronos.yaml
+|FreeBSD(R), Linux, macOS(R), etc.
+|. $XDG_CONFIG_HOME/khronos/.khronos.yaml
+. $HOME/.khronos.yaml
+|===
 
 === Default Configuration
 

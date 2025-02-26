@@ -88,6 +88,7 @@ const HELLO_LONG_DESCRIPTION = "In order to have khronos start tracking time is 
 const HELLO_SHORT_DESCRIPTION = "Start time tracking for the day"
 const HELP_SHORT_DESCRIPTION = "Show help for command"
 const INDENT_AMOUNT int = 4
+const INFO_NORMAL_CASE string = "Info"
 const MAY_BE_OVERRIDDEN_BY_GLOBAL_CONFIGURATION_SETTING = "* May be overridden by global configuration setting"
 const NATURAL_LANGUAGE_DESCRIPTION string = "Natural Language Time, e.g., '18 minutes ago' or '9:45am'"
 const NOTE string = "note"
