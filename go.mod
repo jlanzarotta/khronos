@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/agrison/go-commons-lang v0.0.0-20240106075236-2e001e6401ef
-	github.com/dromara/carbon/v2 v2.5.2
+	github.com/dromara/carbon/v2 v2.5.3
 	github.com/ijt/go-anytime v1.9.2
 	github.com/mattn/go-sqlite3 v1.14.24
 	golang.org/x/term v0.29.0
@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 )
 
 require (
