@@ -141,6 +141,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	var projectTask string = constants.EMPTY
 	var url string = constants.EMPTY
 	var requiredNote bool = false
+	var favoritesNotDisplayed bool = false
 
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
 
@@ -148,6 +149,8 @@ func runAdd(cmd *cobra.Command, args []string) {
 		var fav Favorite = getFavorite(favorite)
 		projectTask = fav.Favorite
 		url = fav.URL
+		requiredNote = fav.RequireNote
+		favoritesNotDisplayed = true
 	} else {
 		if len(args) > 0 {
 			projectTask = args[0]
@@ -203,7 +206,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	if stringUtils.IsEmpty(note) {
 		var globalRequired bool = viper.GetBool(constants.REQUIRE_NOTE)
 		if globalRequired || requiredNote {
-			note = promptForNote(true)
+			note = promptForNote(favoritesNotDisplayed, projectTask, true)
 
 			// If the note is still empty, this is an indicator that the user wants to exit.
 			if len(note) <= 0 {
@@ -214,8 +217,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note,
-		addTime.ToRfc3339String())
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note, addTime.ToRfc3339String())
 
 	// Populate the newly created Entry with its tasks.
 	for i := 1; i < len(pieces); i += 1 {
@@ -234,13 +236,19 @@ func runAdd(cmd *cobra.Command, args []string) {
 	db.InsertNewEntry(entry)
 }
 
-func promptForNote(required bool) string {
+func promptForNote(favoritesNotDisplayed bool, projectTask string, required bool) string {
 	r := bufio.NewReader(os.Stdin)
 	var s string
 	var prompt string
 
 	if required {
-		prompt = "A note is required.  "
+		if favoritesNotDisplayed {
+			prompt = "Project+Task["
+			prompt += projectTask
+			prompt += "] requires a note. "
+		} else {
+			prompt = "A note is required. "
+		}
 	}
 
 	prompt += "Enter note or leave blank to quit. > "

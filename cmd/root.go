@@ -174,8 +174,9 @@ func initConfig() {
 		}
 	}
 
-	// Dump our some debug information.
+	// Dump out some debug information.
 	if viper.GetBool(constants.DEBUG) {
+		log.Printf("%s = [%s]\n", constants.REQUIRE_NOTE, viper.GetString(constants.REQUIRE_NOTE))
 		log.Printf("%s = [%s]\n", constants.WEEK_START, viper.GetString(constants.WEEK_START))
 		log.Printf("%s = [%d]\n", constants.ROUND_TO_MINUTES, viper.GetInt64(constants.ROUND_TO_MINUTES))
 		log.Printf("%s = [%v]\n", constants.SPLIT_WORK_FROM_BREAK_TIME, viper.GetBool(constants.SPLIT_WORK_FROM_BREAK_TIME))
