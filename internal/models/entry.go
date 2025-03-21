@@ -141,7 +141,6 @@ func (e *Entry) Dump(vertical bool, indent_amount int) string {
 		result = "Break Time"
 	} else {
 		// Add the project.
-
 		if vertical {
 			result = "\n"
 		}

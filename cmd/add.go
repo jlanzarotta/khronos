@@ -243,12 +243,17 @@ func promptForNote(favoritesNotDisplayed bool, projectTask string, required bool
 
 	if required {
 		if favoritesNotDisplayed {
-			prompt = color.YellowString("Project+Task")
-            prompt += "["
-			prompt += projectTask
-			prompt += "] requires a note. "
+			pieces := strings.Split(projectTask, "+") 
+			prompt = color.YellowString("Project")
+			prompt += "["
+			prompt += pieces[0]
+			prompt += "] "
+			prompt += color.YellowString("Task")
+			prompt += "["
+			prompt += pieces[1]
+			prompt += "] requires a note.\n"
 		} else {
-			prompt = "A note is required. "
+			prompt = "A note is required.\n"
 		}
 	}
 
