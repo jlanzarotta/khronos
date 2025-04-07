@@ -101,6 +101,12 @@ favorites: <11>
 <10> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
 <11> The list of favorites.
 
+== Date/Time
+
+If needs to be noted that date/time is stored in the database in ISO8601 UTC format https://en.wikipedia.org/wiki/ISO_8601. However, whenever at date/time is
+rendered on the screen, it is rended in local time. For example, `2025-04-07T19:35:31+00:00`, which is UTC, is rendered as `2025-04-07T15:35:31-04:00` Eastern Standard Time with Daylight
+Savings Time being observed since I set my timezone to EST. Your localtime will depend on your current timezone.
+
 == Natural Language Time
 
 Khronos supports natural language time constructs for a subset of

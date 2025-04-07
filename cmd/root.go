@@ -40,6 +40,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -193,6 +194,9 @@ func initConfig() {
 		db := database.New(viper.GetString(constants.DATABASE_FILE))
 		db.Create()
 	}
+
+	// Set the default carbon settings. These settings affect each time we ask carbon to create a new instance.
+	carbon.SetTimezone(carbon.UTC)
 }
 
 func writeDefaultFavorites(home string) {

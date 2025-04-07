@@ -71,7 +71,7 @@ type Favorite struct {
 	Favorite    string `yaml:"favorite"`
 	Description string `yaml:"description"`
 	URL         string `yaml:"url"`
-	RequireNote bool `default:"false" yaml:"require_note"`
+	RequireNote bool   `default:"false" yaml:"require_note"`
 }
 
 func init() {
@@ -116,7 +116,7 @@ func showFavorites() {
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		log.Fatalf("%s: Error unmarshalling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
+		log.Fatalf("%s: Error unmarshaling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
 		os.Exit(1)
 	}
 
@@ -169,9 +169,9 @@ func showStatistics() {
 
 	log.Printf("\n")
 
-	var lastDateTime carbon.Carbon = carbon.Parse(lastEntry.EntryDatetime)
-	var firstDateTime carbon.Carbon = carbon.Parse(firstEntry.EntryDatetime)
-	var diff int64 = firstDateTime.DiffInSeconds(lastDateTime)
+	var lastDateTime carbon.Carbon = *carbon.Parse(lastEntry.EntryDatetime)
+	var firstDateTime carbon.Carbon = *carbon.Parse(firstEntry.EntryDatetime)
+	var diff int64 = firstDateTime.DiffInSeconds(&lastDateTime)
 
 	var t table.Writer = table.NewWriter()
 	t.Style().Options.DrawBorder = false

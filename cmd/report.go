@@ -83,10 +83,9 @@ func separator(input string) string {
 	return (fmt.Sprintf("%s %s %s", pad, input, pad))
 }
 
-func dateRange(date carbon.Carbon) (start carbon.Carbon, end carbon.Carbon) {
-	start = weekStart(date)
-	end = start.AddDays(6).EndOfDay()
-	return start, end
+func dateRange(start *carbon.Carbon, end *carbon.Carbon) {
+	*start = *start.SetWeekStartsAt(carbon.Saturday).StartOfDay()
+	*end = *end.AddDays(6).EndOfDay()
 }
 
 func export(title string, t table.Writer) {
@@ -95,7 +94,7 @@ func export(title string, t table.Writer) {
 		typeStr, _ := _cmd.Flags().GetString(constants.EXPORT_TYPE)
 		if len(strings.TrimSpace(exportFilename)) == 0 {
 			// Create our new export file.
-			exportFilename = constants.APPLICATION_NAME_LOWERCASE + "_report_" + carbon.Now().ToShortDateTimeString()
+			exportFilename = constants.APPLICATION_NAME_LOWERCASE + "_report_" + carbon.Now(carbon.Local).ToShortDateTimeString()
 			if typeStr == string(models.ExportTypeCSV) {
 				exportFilename += ".csv"
 			} else if typeStr == string(models.ExportTypeHTML) {
@@ -284,9 +283,11 @@ func reportByEntry(entries []models.Entry) {
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 
 	for _, entry := range entries {
+		var end carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
+		var start carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local).SubSeconds(int(entry.Duration))
 		t.AppendRow(table.Row{
-			carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT),
-			carbon.Parse(entry.EntryDatetime).SubSeconds(int(entry.Duration)).Format(startEndTimeFormat) + " to " + carbon.Parse(entry.EntryDatetime).Format(startEndTimeFormat),
+			end.Format(constants.CARBON_DATE_FORMAT),
+			start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
 			secondsToHuman(round(entry.Duration), true),
 			entry.Project,
 			entry.GetTasksAsString(),
@@ -479,9 +480,6 @@ func round(durationInSeconds int64) (result int64) {
 }
 
 func runReport(cmd *cobra.Command, _ []string) {
-	var start carbon.Carbon
-	var end carbon.Carbon
-
 	// Save this so we can use it in other methods.
 	_cmd = cmd
 
@@ -502,7 +500,9 @@ func runReport(cmd *cobra.Command, _ []string) {
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 
-	var reportNow = carbon.Now()
+	var now carbon.Carbon = *carbon.Now()
+	var start carbon.Carbon = now
+	var end carbon.Carbon = now
 
 	if lastEntry {
 		reportByLastEntry()
@@ -510,37 +510,42 @@ func runReport(cmd *cobra.Command, _ []string) {
 	} else if stringUtils.IsEmpty(fromDateStr) &&
 		stringUtils.IsEmpty(toDateStr) &&
 		currentWeek {
-		start, end = dateRange(reportNow)
+			dateRange(&start, &end)
 	} else if stringUtils.IsEmpty(fromDateStr) &&
 		stringUtils.IsEmpty(toDateStr) &&
 		previousWeek {
-		start, end = dateRange(reportNow.SubWeek())
+			start = *start.SubWeek()
+			dateRange(&start, &end)
 	} else if !stringUtils.IsEmpty(fromDateStr) &&
 		!stringUtils.IsEmpty(toDateStr) {
-		start = carbon.Parse(fromDateStr)
-		end = carbon.Parse(toDateStr)
+			start = *carbon.Parse(fromDateStr)
+			end = *carbon.Parse(toDateStr)
 	} else if !stringUtils.IsEmpty(givenDateStr) {
 		// Report for given date.
-		start = carbon.Parse(givenDateStr).StartOfDay()
-		end = carbon.Parse(givenDateStr).EndOfDay()
+		start = *carbon.Parse(givenDateStr).StartOfDay()
+		end = *carbon.Parse(givenDateStr).EndOfDay()
 	} else {
 		if yesterday {
 			// Report for yesterday
 			yesterday := carbon.Yesterday()
-			start = yesterday.StartOfDay()
-			end = yesterday.EndOfDay()
+			start = *yesterday.StartOfDay()
+			end = *yesterday.EndOfDay()
 		} else {
 			// Report for today.
-			start = carbon.Now().StartOfDay()
-			end = carbon.Now().EndOfDay()
+			start = *now.StartOfDay()
+			end = *now.EndOfDay()
 		}
+	}
+
+	if viper.GetBool(constants.DEBUG) {
+		log.Printf("\n*****\nStart[%s]\nEnd[%s]\n*****\n", start.ToIso8601String(), end.ToIso8601String())
 	}
 
 	var startWeek int = start.WeekOfYear()
 	var endWeek int = end.WeekOfYear()
 
-	log.Printf("%s\n", separator(fmt.Sprintf("%s(%d) to %s(%d)",
-		start, startWeek, end, endWeek)))
+	log.Printf("%s\n", separator(fmt.Sprintf("%s(%d) to %s(%d)", start.ToDateString(), startWeek, end.ToDateString(),
+		endWeek)))
 
 	// Get the unique UIDs between the specified start and end dates.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
@@ -588,26 +593,26 @@ func runReport(cmd *cobra.Command, _ []string) {
 		// Check to see if the 1st element we have is a HELLO.  If not, we need to adjust
 		// accordingly.
 		if index == 0 || strings.EqualFold(entries[index].Project, constants.HELLO) {
-			var current carbon.Carbon = carbon.Parse(entries[index].EntryDatetime)
+			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
 			}
 
 			// Prior is Midnight since this is the 1st record.
-			var midnight carbon.Carbon = current.StartOfDay()
+			var midnight carbon.Carbon = *current.StartOfDay()
 			var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, entries[index].EntryDatetime)
 			entry.Properties = entries[index].Properties
-			entry.Duration = current.DiffAbsInSeconds(midnight)
+			entry.Duration = current.DiffAbsInSeconds(&midnight)
 			newEntries = append(newEntries, entry)
 		} else {
-			var current carbon.Carbon = carbon.Parse(entries[index].EntryDatetime)
+			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
 			}
 
-			var prior carbon.Carbon = carbon.Parse(entries[index-1].EntryDatetime)
+			var prior carbon.Carbon = *carbon.Parse(entries[index-1].EntryDatetime)
 			if prior.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), prior.Error)
 				os.Exit(1)
@@ -615,31 +620,31 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 			// Are the days between the current and prior different?  If they
 			// are, that means we went over midnight.
-			if !current.IsSameDay(prior) {
+			if !current.IsSameDay(&prior) {
 				// Since we have an entry that goes over midnight, we need to
 				// create two entries.  One for the time before midnight and one
 				// for the time after midnight.
 				if viper.GetBool(constants.DEBUG) {
 					log.Printf("We went over midnight.\n")
-					log.Printf("    current[%s] prior[%s]\n", current, prior)
+					log.Printf("    current[%s] prior[%s]\n", &current, &prior)
 					log.Printf("    prior midnight[%s]\n", prior.EndOfDay())
 				}
 
 				// Before midnight.
 				var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, prior.EndOfDay().ToRfc3339String())
 				entry.Properties = entries[index].Properties
-				entry.Duration = prior.EndOfDay().DiffAbsInSeconds(prior)
+				entry.Duration = prior.EndOfDay().DiffAbsInSeconds(&prior)
 				newEntries = append(newEntries, entry)
 
 				// After midnight.
 				entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, current.ToRfc3339String())
 				entry.Properties = entries[index].Properties
-				entry.Duration = current.StartOfDay().DiffAbsInSeconds(current)
+				entry.Duration = current.StartOfDay().DiffAbsInSeconds(&current)
 				newEntries = append(newEntries, entry)
 			} else {
 				var entry models.Entry = models.NewEntry(entries[index].Uid, entries[index].Project, entries[index].Note, entries[index].EntryDatetime)
 				entry.Properties = entries[index].Properties
-				entry.Duration = current.DiffAbsInSeconds(prior)
+				entry.Duration = current.DiffAbsInSeconds(&prior)
 				newEntries = append(newEntries, entry)
 			}
 		}
@@ -703,6 +708,10 @@ func runReport(cmd *cobra.Command, _ []string) {
 	}
 }
 
+func secondsToHumanFloat(inSeconds float64, hmsOnly bool) (result string) {
+	return secondsToHuman(int64(inSeconds), hmsOnly)
+}
+
 func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 	// If the duration is zero, this means than the rounded value is less than
 	// the "round to minutes" value, simply show a less than message.
@@ -756,14 +765,4 @@ func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 	}
 
 	return stringUtils.Trim(result)
-}
-
-func weekStart(date carbon.Carbon) carbon.Carbon {
-	dayOfWeek, err := parseWeekday(viper.GetString(constants.WEEK_START))
-	if err != nil {
-		log.Fatalf("%s: %s is an invalid day of week.  Please correct your configuration.\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.GetString(constants.WEEK_START))
-		os.Exit(1)
-	}
-
-	return date.SetWeekStartsAt(dayOfWeek).StartOfWeek()
 }
