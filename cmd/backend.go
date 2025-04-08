@@ -42,7 +42,7 @@ import (
 )
 
 var backendCmd = &cobra.Command{
-	Use:     "backend",
+	Use:     constants.COMMAND_BACKEND,
 	Aliases: []string{"b", "back"},
 	Args:    cobra.ExactArgs(0),
 	Short:   constants.BACKEND_SHORT_DESCRIPTION,

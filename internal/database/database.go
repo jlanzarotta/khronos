@@ -425,7 +425,7 @@ func (db *Database) GetCountEntries() int64 {
 
 func CreateArchiveFile(entryWithProperty []EntryWithProperty, compress bool) {
 	// Create our unique archive file.
-	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now().ToShortDateTimeString()
+	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now(carbon.Local).ToShortDateTimeString()
 	archiveFile, err := os.Create(filename + ".csv")
 	if err != nil {
 		log.Fatalf("%s: Error trying to create archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
