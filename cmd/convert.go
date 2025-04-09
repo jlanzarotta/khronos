@@ -31,19 +31,20 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"khronos/constants"
 	"log"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"khronos/constants"
 	"khronos/internal/database"
 )
 
 // convertCmd represents the add command
 var convertCmd = &cobra.Command{
-	Use:   "convert",
+	Use:   constants.COMMAND_CONVERT,
 	Args:  cobra.MaximumNArgs(1),
 	Short: constants.CONVERT_SHORT_DESCRIPTION,
 	Long:  constants.CONVERT_LONG_DESCRIPTION,
@@ -62,6 +63,9 @@ func runConvert(cmd *cobra.Command, args []string) {
 		db := database.New(viper.GetString(constants.DATABASE_FILE))
 		db.ConvertAllEntriesToUTC()
 
-		log.Printf("All entries %s.\n", color.GreenString(constants.ADDING))
-	}
+		log.Printf("All entries %s.\n", color.GreenString(constants.CONVERTED))
+	} else {
+        log.Printf("%s\n", color.YellowString("Nothing " + constants.CONVERTED + "."))
+        os.Exit(0)
+    }
 }

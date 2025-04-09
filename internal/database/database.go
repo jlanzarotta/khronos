@@ -136,8 +136,6 @@ func (db *Database) ConvertAllEntriesToUTC() {
 		query.WriteString(fmt.Sprintf(" entry_datetime = '%s'", utc.ToIso8601String()))
 		query.WriteString(fmt.Sprintf(" WHERE uid = %d;", entry.Uid))
 
-		log.Printf("Query[%s]\n", query.String())
-
 		_, err = tx.ExecContext(db.Context, query.String())
 		if err != nil {
 			log.Fatalf("%s: Error trying to update entries records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
