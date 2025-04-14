@@ -70,6 +70,8 @@ func runBackup(_ []string) {
 		log.Fatalf("%s: Error trying to backup database file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err)
 		os.Exit(1)
 	}
+
+	log.Printf("%s.\n", color.GreenString(constants.DONE))
 	os.Exit(0)
 }
 

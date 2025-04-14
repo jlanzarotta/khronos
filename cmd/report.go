@@ -84,7 +84,14 @@ func separator(input string) string {
 }
 
 func dateRange(start *carbon.Carbon, end *carbon.Carbon) {
-	*start = *start.SetWeekStartsAt(carbon.Saturday).StartOfDay()
+	dayOfWeek, err := parseWeekday(viper.GetString(constants.WEEK_START))
+	if err != nil {
+		log.Fatalf("%s: %s is an invalid day of week.  Please correct your configuration.\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.GetString(constants.WEEK_START))
+		os.Exit(1)
+	}
+
+	*start = *start.SetWeekStartsAt(dayOfWeek).StartOfWeek().StartOfDay()
+	*end = *start.Copy()
 	*end = *end.AddDays(6).EndOfDay()
 }
 
@@ -304,11 +311,14 @@ func reportByEntry(entries []models.Entry) {
 func reportByLastEntry() {
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	var entry models.Entry = db.GetLastEntry()
+	var datetime carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
 	if strings.EqualFold(entry.Project, constants.HELLO) ||
 		strings.EqualFold(entry.Project, constants.BREAK) {
-		log.Printf("DateTime: %s\n      Project: %s\n    Note: %s\n", carbon.Parse(entry.EntryDatetime).Format("Y-m-d g:i:sa"), entry.Project, entry.Note)
+		log.Printf("DateTime: %s\n      Project: %s\n    Note: %s\n", datetime.Format("Y-m-d g:i:sa"),
+			entry.Project, entry.Note)
 	} else {
-		log.Printf("DateTime: %s\n Project: %s\n   Tasks: %s\n    Note: %s\n", carbon.Parse(entry.EntryDatetime).Format("Y-m-d g:i:sa"), entry.Project, entry.GetTasksAsString(), entry.Note)
+		log.Printf("DateTime: %s\n Project: %s\n   Tasks: %s\n    Note: %s\n", datetime.Format("Y-m-d g:i:sa"),
+			entry.Project, entry.GetTasksAsString(), entry.Note)
 	}
 }
 
@@ -501,8 +511,8 @@ func runReport(cmd *cobra.Command, _ []string) {
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 
 	var now carbon.Carbon = *carbon.Now()
-	var start carbon.Carbon = now
-	var end carbon.Carbon = now
+	var start carbon.Carbon = *now.Copy()
+	var end carbon.Carbon = *now.Copy()
 
 	if lastEntry {
 		reportByLastEntry()
@@ -510,16 +520,16 @@ func runReport(cmd *cobra.Command, _ []string) {
 	} else if stringUtils.IsEmpty(fromDateStr) &&
 		stringUtils.IsEmpty(toDateStr) &&
 		currentWeek {
-			dateRange(&start, &end)
+		dateRange(&start, &end)
 	} else if stringUtils.IsEmpty(fromDateStr) &&
 		stringUtils.IsEmpty(toDateStr) &&
 		previousWeek {
-			start = *start.SubWeek()
-			dateRange(&start, &end)
+		start = *start.SubWeek()
+		dateRange(&start, &end)
 	} else if !stringUtils.IsEmpty(fromDateStr) &&
 		!stringUtils.IsEmpty(toDateStr) {
-			start = *carbon.Parse(fromDateStr)
-			end = *carbon.Parse(toDateStr)
+		start = *carbon.Parse(fromDateStr)
+		end = *carbon.Parse(toDateStr)
 	} else if !stringUtils.IsEmpty(givenDateStr) {
 		// Report for given date.
 		start = *carbon.Parse(givenDateStr).StartOfDay()
@@ -544,8 +554,8 @@ func runReport(cmd *cobra.Command, _ []string) {
 	var startWeek int = start.WeekOfYear()
 	var endWeek int = end.WeekOfYear()
 
-	log.Printf("%s\n", separator(fmt.Sprintf("%s(%d) to %s(%d)", start.ToDateString(), startWeek, end.ToDateString(),
-		endWeek)))
+	log.Printf("%s\n", separator(fmt.Sprintf("%s(%d) to %s(%d)", start.ToDateTimeString(), startWeek,
+		end.ToDateTimeString(), endWeek)))
 
 	// Get the unique UIDs between the specified start and end dates.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
