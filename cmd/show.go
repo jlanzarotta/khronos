@@ -38,6 +38,7 @@ import (
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -134,7 +135,33 @@ func showFavorites() {
 		}
 	}
 
-	t.Style().Options.DrawBorder = false
+    t.SetStyle(table.Style{
+        Name: "ShowFavorites",
+        Box: table.BoxStyle{
+            MiddleHorizontal: "-",
+            MiddleSeparator:  "+",
+            MiddleVertical:   "|",
+            PaddingLeft:      " ",
+            PaddingRight:     " ",
+        },
+        Color: table.ColorOptions{
+            IndexColumn:     text.Colors{text.BgCyan, text.FgBlack},
+            Row:               text.Colors{text.BgBlack, text.FgWhite},
+            RowAlternate:      text.Colors{text.BgBlack, text.FgHiWhite},
+        },
+        Format: table.FormatOptions{
+            Header: text.FormatUpper,
+            Row:    text.FormatDefault,
+        },
+        Options: table.Options{
+            DrawBorder:      false,
+            SeparateColumns: true,
+            SeparateFooter:  false,
+            SeparateHeader:  true,
+            SeparateRows:    false,
+        },
+    })
+
 	if descriptionFound && urlFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else if descriptionFound {

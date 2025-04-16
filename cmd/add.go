@@ -190,7 +190,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 				// Convert the string to an integer, thus validating the user entered a number.
 				i, err := strconv.Atoi(s)
 				if err != nil {
-					log.Printf("Invalid number entered.\n")
+		            log.Printf("%s.\n\n", color.RedString("Invalid number entered"))
 					continue
 				}
 

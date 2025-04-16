@@ -48,6 +48,7 @@ import (
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -252,7 +253,8 @@ func reportByDay(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	t.Style().Options.DrawBorder = false
+    setReportTableStyle(t)
+
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
 	// Add each row to the table.
@@ -286,7 +288,8 @@ func reportByEntry(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	t.Style().Options.DrawBorder = false
+    setReportTableStyle(t)
+
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 
 	for _, entry := range entries {
@@ -359,7 +362,8 @@ func reportByProject(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	t.Style().Options.DrawBorder = false
+    setReportTableStyle(t)
+
 	t.AppendHeader(table.Row{constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
 	// Add all the consolidated rows to the table.
@@ -411,7 +415,8 @@ func reportByTask(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	t.Style().Options.DrawBorder = false
+    setReportTableStyle(t)
+
 	if !urlFound {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 	} else {
@@ -472,6 +477,44 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 			log.Printf("Total Time: %s\n", secondsToHuman(total, true))
 		}
 	}
+}
+
+func setReportTableStyle(t table.Writer) {
+    t.SetStyle(table.Style{
+        Name: "ReportStyle",
+        Box: table.BoxStyle{
+            MiddleHorizontal: "-",
+            MiddleSeparator:  "+",
+            MiddleVertical:   "|",
+            PaddingLeft:      " ",
+            PaddingRight:     " ",
+        },
+        Color: table.ColorOptions{
+            Row: text.Colors{text.BgBlack, text.FgWhite},
+            RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
+            Separator: text.Colors{text.BgBlack, text.FgHiWhite},
+        },
+        Format: table.FormatOptions{
+            Header: text.FormatUpper,
+            Row:    text.FormatDefault,
+        },
+        Options: table.Options{
+            DrawBorder:      false,
+            SeparateColumns: true,
+            SeparateFooter:  false,
+            SeparateHeader:  true,
+            SeparateRows:    false,
+        },
+    })
+
+    // For the TOTAL line, make sure we highlight it correctly.
+    t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
+        switch row[2] {
+        case constants.TOTAL:
+            return text.Colors{text.BgBlack, text.FgHiWhite}
+        }
+        return nil
+    }))
 }
 
 func round(durationInSeconds int64) (result int64) {
