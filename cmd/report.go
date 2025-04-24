@@ -510,8 +510,8 @@ func setReportTableStyle(t table.Writer) {
     // For the TOTAL line, make sure we highlight it correctly.
     t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
         switch row[2] {
-        case constants.TOTAL:
-            return text.Colors{text.BgBlack, text.FgHiWhite}
+            case constants.TOTAL:
+                return text.Colors{text.BgBlack, text.FgHiWhite}
         }
         return nil
     }))
