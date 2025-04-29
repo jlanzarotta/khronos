@@ -74,7 +74,7 @@ func init() {
 
 func runBreak(cmd *cobra.Command, _ []string) {
 	// Get the current date/time.
-	var breakTime carbon.Carbon = carbon.Now()
+	var breakTime carbon.Carbon = *carbon.Now()
 
 	// Get the --at flag.
 	atTimeStr, _ := cmd.Flags().GetString(constants.AT)
@@ -83,16 +83,17 @@ func runBreak(cmd *cobra.Command, _ []string) {
 	if !stringUtils.IsEmpty(atTimeStr) {
 		atTime, err := anytime.Parse(atTimeStr, time.Now())
 		if err != nil {
-			log.Fatalf("%s: Failed parsing 'at' time. %s.  For natural date examples see https://github.com/ijt/go-anytime\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			log.Fatalf("%s: Failed parsing 'at' time. %s. For natural date examples see https://github.com/ijt/go-anytime\n",
+				color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 			os.Exit(1)
 		}
 
-		breakTime = carbon.CreateFromStdTime(atTime)
+		breakTime = *carbon.CreateFromStdTime(atTime)
 	}
 
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.BREAK, note,
-		breakTime.ToRfc3339String())
+		breakTime.ToIso8601String())
 
 	log.Printf("%s %s.\n", color.GreenString(constants.ADDING), entry.Dump(false, 0))
 

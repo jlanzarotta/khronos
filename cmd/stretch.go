@@ -67,7 +67,7 @@ func init() {
 
 func runStretch(cmd *cobra.Command, _ []string) {
 	// Get the current date/time.
-	var stretchTime carbon.Carbon = carbon.Now()
+	var stretchTime carbon.Carbon = *carbon.Now()
 
 	// Get the --at flag.
 	atTimeStr, _ := cmd.Flags().GetString(constants.AT)
@@ -80,7 +80,7 @@ func runStretch(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 
-		stretchTime = carbon.CreateFromStdTime(atTime)
+		stretchTime = *carbon.CreateFromStdTime(atTime)
 	}
 
 	// Get the last Entry from the database.
@@ -89,7 +89,8 @@ func runStretch(cmd *cobra.Command, _ []string) {
 
 	// Create the prompt.
 	var prompt string = "Would you like to stretch the last entry\n" + entry.Dump(true, constants.INDENT_AMOUNT)
-	prompt = prompt + "\n\nto " + stretchTime.ToCookieString() + "?"
+	prompt = prompt + "\n\nto " + stretchTime.ToIso8601String(carbon.Local) + " which is a difference of " +
+	secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false) + "?"
 
 	// Ask the user if they actually want to stretch the last entry or not.
 	yesNo := yesNoPrompt(prompt)

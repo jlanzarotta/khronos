@@ -80,9 +80,9 @@ func runAmend(cmd *cobra.Command, _ []string) {
 			var t table.Writer = table.NewWriter()
 			t.SetAutoIndex(true)
 			t.AppendHeader(table.Row{"Project", "Task(s)", "Date/Time"})
-			var entries []models.Entry = db.GetEntriesForToday(carbon.Now().StartOfDay(), carbon.Now().EndOfDay())
+			var entries []models.Entry = db.GetEntriesForToday(*carbon.Now().StartOfDay(), *carbon.Now().EndOfDay())
 			for _, entry := range entries {
-				t.AppendRow(table.Row{entry.Project, entry.GetTasksAsString(), entry.EntryDatetime})
+				t.AppendRow(table.Row{entry.Project, entry.GetTasksAsString(), carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)})
 			}
 
 			log.Println(t.Render())
@@ -138,7 +138,7 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		newURL = prompt(constants.URL_NORMAL_CASE, entry.GetUrlAsString())
 	}
 
-	newEntryDatetime := prompt(constants.DATE_TIME_NORMAL_CASE, entry.EntryDatetime)
+	newEntryDatetime := prompt(constants.DATE_TIME_NORMAL_CASE, carbon.Parse(entry.EntryDatetime).ToIso8601String(carbon.Local))
 
 	// Validate that the user entered a correctly formatted date/time.
 	e := carbon.Parse(newEntryDatetime)
@@ -162,7 +162,9 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		t.AppendRow(table.Row{constants.URL_NORMAL_CASE, entry.GetUrlAsString(), newURL})
 	}
 
-	t.AppendRow(table.Row{constants.DATE_TIME_NORMAL_CASE, entry.EntryDatetime, newEntryDatetime})
+	t.AppendRow(table.Row{constants.DATE_TIME_NORMAL_CASE,
+		carbon.Parse(entry.EntryDatetime).ToIso8601String(carbon.Local),
+		carbon.Parse(newEntryDatetime).ToIso8601String(carbon.Local)})
 
 	// Render the table.
 	log.Println(t.Render())
@@ -174,7 +176,7 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		e.Uid = entry.Uid
 		e.Project = newProject
 		e.Note = newNote
-		e.EntryDatetime = newEntryDatetime
+		e.EntryDatetime = carbon.Parse(newEntryDatetime).ToIso8601String()
 		e.AddEntryProperty(constants.TASK, newTask)
 
 		if len(newURL) > 0 {

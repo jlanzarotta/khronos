@@ -34,6 +34,7 @@ import (
 	"khronos/constants"
 	"strings"
 
+	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 )
 
@@ -175,7 +176,7 @@ func (e *Entry) Dump(vertical bool, indent_amount int) string {
 	if vertical {
 		result += "\n  "
 	}
-	result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Date") + "[" + e.EntryDatetime + "]"
+	result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Date") + "[" + carbon.Parse(e.EntryDatetime).ToIso8601String(carbon.Local) + "]"
 
 	return result
 }

@@ -53,7 +53,7 @@ var at string
 
 // helloCmd represents the hello command
 var helloCmd = &cobra.Command{
-	Use:   "hello",
+	Use:   constants.COMMAND_HELLO,
 	Short: constants.HELLO_SHORT_DESCRIPTION,
 	Long:  constants.HELLO_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -68,13 +68,17 @@ func init() {
 
 func greetings(c carbon.Carbon) string {
 	var value string
-	if c.Hour() >= 0 && c.Hour() < 12 {
+
+	// Convert to local time so we get the correct hour.
+	var localTime = c.SetTimezone(carbon.Local)
+
+	if c.Hour() >= 0 && localTime.Hour() < 12 {
 		value = "Good morning, "
-	} else if c.Hour() >= 12 && c.Hour() < 16 {
+	} else if localTime.Hour() >= 12 && localTime.Hour() < 16 {
 		value = "Good afternoon, "
-	} else if c.Hour() >= 16 && c.Hour() < 21 {
+	} else if localTime.Hour() >= 16 && localTime.Hour() < 21 {
 		value = "Good evening, "
-	} else if c.Hour() >= 21 && c.Hour() < 24 {
+	} else if localTime.Hour() >= 21 && localTime.Hour() < 24 {
 		value = "You are up late, "
 	}
 
@@ -92,7 +96,7 @@ func greetings(c carbon.Carbon) string {
 
 func runHello(cmd *cobra.Command, _ []string) {
 	// Get the current date/time.
-	var helloTime carbon.Carbon = carbon.Now()
+	var helloTime carbon.Carbon = *carbon.Now()
 
 	// Get the --at flag.
 	atTimeStr, _ := cmd.Flags().GetString(constants.AT)
@@ -105,28 +109,29 @@ func runHello(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 
-		helloTime = carbon.CreateFromStdTime(atTime)
+		helloTime = *carbon.CreateFromStdTime(atTime)
 	}
 
 	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToRfc3339String())
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToIso8601String())
 
 	// Get the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 
 	// Get the last Entry.
 	var lastEntry models.Entry = db.GetLastEntry()
+	if lastEntry.Uid != constants.UNKNOWN_UID {
+		// Check if the last entry was a HELLO. If is was, was it on the day as this
+		// new entry? If so, reject the new attempt to add a HELLO.
+		if strings.EqualFold(lastEntry.Project, constants.HELLO) {
+			var lastDateTime carbon.Carbon = *carbon.Parse(lastEntry.EntryDatetime)
+			var helloDateTime carbon.Carbon = *carbon.Parse(entry.EntryDatetime)
+			var diff int64 = lastDateTime.DiffAbsInDays(&helloDateTime)
 
-	// Check if the last entry was a HELLO. If is was, was it on the day as this
-	// new entry? If so, reject the new attempt to add a HELLO.
-	if strings.EqualFold(lastEntry.Project, constants.HELLO) {
-		var lastDateTime carbon.Carbon = carbon.Parse(lastEntry.EntryDatetime)
-		var helloDateTime carbon.Carbon = carbon.Parse(entry.EntryDatetime)
-		var diff int64 = lastDateTime.DiffAbsInDays(helloDateTime)
-
-		if diff == 0 {
-			log.Printf("%s\n", color.YellowString("No need to start time tracking for today, as it was already started at "+lastDateTime.String()+"."))
-			return
+			if diff == 0 {
+				log.Printf("%s\n", color.YellowString("No need to start time tracking for today, as it was already started at "+lastDateTime.String()+"."))
+				return
+			}
 		}
 	}
 

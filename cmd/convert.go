@@ -31,42 +31,41 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"khronos/constants"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"khronos/constants"
+	"khronos/internal/database"
 )
 
-var backendCmd = &cobra.Command{
-	Use:     constants.COMMAND_BACKEND,
-	Aliases: []string{"b", "back"},
-	Args:    cobra.ExactArgs(0),
-	Short:   constants.BACKEND_SHORT_DESCRIPTION,
-	Long:    constants.BACKEND_LONG_DESCRIPTION,
+// convertCmd represents the add command
+var convertCmd = &cobra.Command{
+	Use:   constants.COMMAND_CONVERT,
+	Args:  cobra.MaximumNArgs(1),
+	Short: constants.CONVERT_SHORT_DESCRIPTION,
+	Long:  constants.CONVERT_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
-		runBackend(args)
+		runConvert(cmd, args)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(backendCmd)
+	rootCmd.AddCommand(convertCmd)
 }
 
-func runBackend(_ []string) {
-	cmd := exec.Command("sqlite3", viper.GetString("database_file"))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+func runConvert(cmd *cobra.Command, args []string) {
+	yesNo := yesNoPrompt("Are you sure you want to convert ALL the entries in your database to UTC?")
+	if yesNo {
+		db := database.New(viper.GetString(constants.DATABASE_FILE))
+		db.ConvertAllEntriesToUTC()
 
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
-		os.Exit(1)
-	}
-
-	os.Exit(0)
+		log.Printf("All entries %s.\n", color.GreenString(constants.CONVERTED))
+	} else {
+        log.Printf("%s\n", color.YellowString("Nothing " + constants.CONVERTED + "."))
+        os.Exit(0)
+    }
 }

@@ -104,7 +104,7 @@ func getNumberOfFavorites() int {
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		log.Fatalf("%s: Error unmarshalling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
+		log.Fatalf("%s: Error unmarshaling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
 		os.Exit(1)
 	}
 
@@ -121,10 +121,19 @@ func init() {
 
 func runAdd(cmd *cobra.Command, args []string) {
 	// Get the current date/time.
-	var addTime carbon.Carbon = carbon.Now()
+	var addTime carbon.Carbon = *carbon.Now()
 
 	// Get the --at flag.
 	atTimeStr, _ := cmd.Flags().GetString(constants.AT)
+
+	// Make sure there are records in the database.
+	db := database.New(viper.GetString(constants.DATABASE_FILE))
+	var lastEntry models.Entry = db.GetLastEntry()
+	if lastEntry.Uid == constants.UNKNOWN_UID {
+		log.Fatalf("%s: There are no records in your database yet. To start time tracking, please perform a %s first.\n",
+			color.RedString(constants.FATAL_NORMAL_CASE), color.YellowString(constants.COMMAND_HELLO))
+		os.Exit(1)
+	}
 
 	// Check it the --at flag was enter or not.
 	if !stringUtils.IsEmpty(atTimeStr) {
@@ -135,7 +144,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		addTime = carbon.CreateFromStdTime(atTime)
+		addTime = *carbon.CreateFromStdTime(atTime)
 	}
 
 	var projectTask string = constants.EMPTY
@@ -181,7 +190,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 				// Convert the string to an integer, thus validating the user entered a number.
 				i, err := strconv.Atoi(s)
 				if err != nil {
-					log.Printf("Invalid number entered.\n")
+		            log.Printf("%s.\n\n", color.RedString("Invalid number entered"))
 					continue
 				}
 
@@ -217,7 +226,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note, addTime.ToRfc3339String())
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note, addTime.ToIso8601String())
 
 	// Populate the newly created Entry with its tasks.
 	for i := 1; i < len(pieces); i += 1 {
@@ -232,7 +241,6 @@ func runAdd(cmd *cobra.Command, args []string) {
 	log.Printf("%s%s.\n", color.GreenString(constants.ADDING), entry.Dump(true, constants.INDENT_AMOUNT))
 
 	// Write the new Entry to the database.
-	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	db.InsertNewEntry(entry)
 }
 
@@ -243,7 +251,7 @@ func promptForNote(favoritesNotDisplayed bool, projectTask string, required bool
 
 	if required {
 		if favoritesNotDisplayed {
-			pieces := strings.Split(projectTask, "+") 
+			pieces := strings.Split(projectTask, "+")
 			prompt = color.YellowString("Project")
 			prompt += "["
 			prompt += pieces[0]
@@ -251,9 +259,9 @@ func promptForNote(favoritesNotDisplayed bool, projectTask string, required bool
 			prompt += color.YellowString("Task")
 			prompt += "["
 			prompt += pieces[1]
-			prompt += "] requires a note.\n"
+			prompt += "] requires a note...\n"
 		} else {
-			prompt = "A note is required.\n"
+			prompt = "A note is required...\n"
 		}
 	}
 

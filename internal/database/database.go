@@ -100,6 +100,57 @@ func (db *Database) Create() {
 	}
 }
 
+func (db *Database) ConvertAllEntriesToUTC() {
+	var s string = fmt.Sprintf("SELECT e.uid, e.project, e.note, e.entry_datetime FROM entry e ORDER BY e.uid;")
+	results, err := db.Conn.Query(s)
+	if err != nil {
+		log.Fatalf("%s: Error trying to retrieve Entry records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	// Create a transaction.
+	tx, err := db.Conn.BeginTx(db.Context, nil)
+	if err != nil {
+		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	var query strings.Builder
+
+	// Loop over all records, checking if it needs to be converted. If it does, convert it.
+	for results.Next() {
+		var entry models.Entry
+		err = results.Scan(&entry.Uid, &entry.Project, &entry.Note, &entry.EntryDatetime)
+		if err != nil {
+			log.Fatalf("%s: Error trying to Scan Entries results into data structure. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		// Convert entry datetime to UTC.
+		var utc carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.UTC)
+
+		// Update the record.
+		query.Reset()
+		query.WriteString("UPDATE entry")
+		query.WriteString(" SET")
+		query.WriteString(fmt.Sprintf(" entry_datetime = '%s'", utc.ToIso8601String()))
+		query.WriteString(fmt.Sprintf(" WHERE uid = %d;", entry.Uid))
+
+		_, err = tx.ExecContext(db.Context, query.String())
+		if err != nil {
+			log.Fatalf("%s: Error trying to update entries records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			tx.Rollback()
+			os.Exit(1)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+}
+
 func (db *Database) InsertNewEntry(entry models.Entry) {
 	tx, err := db.Conn.BeginTx(db.Context, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
@@ -339,8 +390,7 @@ func (db *Database) GetLastEntry() models.Entry {
 	result.Next()
 	err = result.Scan(&lastUid)
 	if err != nil {
-		log.Fatalf("%s: Error trying to Scan last Uid into data structure. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
-		os.Exit(1)
+		return models.NewEntry(constants.UNKNOWN_UID, constants.EMPTY, constants.EMPTY, constants.EMPTY)
 	}
 
 	result.Close()
@@ -373,7 +423,7 @@ func (db *Database) GetCountEntries() int64 {
 
 func CreateArchiveFile(entryWithProperty []EntryWithProperty, compress bool) {
 	// Create our unique archive file.
-	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now().ToShortDateTimeString()
+	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now(carbon.Local).ToShortDateTimeString()
 	archiveFile, err := os.Create(filename + ".csv")
 	if err != nil {
 		log.Fatalf("%s: Error trying to create archive file. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())

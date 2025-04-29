@@ -14,6 +14,33 @@ Khronos is a simple command line tool use to track the time you spend on a
 specific project and the one or more tasks associated with that project.  It was
 inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.
 
+== Version 3.0 and above
+
+With the introduction of version 3, the entry date/time is now automatically
+recorded in UTC timezone, NOT the local timezone. This way, when an entry's
+date/time is displayed, it is automatically converted into the running machine's
+timezone.
+
+If you are using versions of Khronos before and wish to us version 3.0+, you
+should use the `convert` command to convert all the entries in your database
+from local timezone to UTC. To do this, execute the following commands after
+updating to version 3.0:
+
+[source, shell]
+----
+# Backup your database... Just in case.
+> k backup
+Backing up C:\Users\yourname\.khronos.db to C:\Users\yourname\.khronos.db-backup_20250429090217...
+Done.
+
+# Convert to UTC...
+> k convert
+Are you sure you want to convert ALL the entries in your database to UTC? (Y/N (yes/no)) >yes
+All entries converted.
+----
+
+Your database is now converted and you can continue using version 3.0+...
+
 == Installation
 
 These are the various methods in order to install Khronos on your system.
@@ -25,10 +52,10 @@ You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khrono
 [source, shell]
 ----
 # Add the khronos bucket.
-scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
+> scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
 
 # Install khronos.
-scoop install khronos
+> scoop install khronos
 ----
 
 I personally like to alias the Khronos executable (khronos.exe) to a simple
@@ -100,6 +127,12 @@ favorites: <11>
 <9> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
 <10> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
 <11> The list of favorites.
+
+== Date/Time
+
+If needs to be noted that date/time is stored in the database in ISO8601 UTC format https://en.wikipedia.org/wiki/ISO_8601. However, whenever at date/time is
+rendered on the screen, it is rended in local time. For example, `2025-04-07T19:35:31+00:00`, which is UTC, is rendered as `2025-04-07T15:35:31-04:00` Eastern Standard Time with Daylight
+Savings Time being observed since I set my timezone to EST. Your localtime will depend on your current timezone.
 
 == Natural Language Time
 
@@ -375,6 +408,17 @@ Enter Date Time (empty for no change) [2024-04-10T10:32:24-04:00] : 2024-04-10T1
  Datetime | 2024-04-10T10:32:24-04:00 | 2024-04-10T10:30:00-00:00
 
 Commit these changes? (Y/N (yes/no))
+----
+
+=== backup
+
+The `backup` command tells Khronos that you would like for it to backup your database to a uniquely named _-backup_yyyymmddhhmmss_ backup file.
+
+[source, shell]
+----
+$ k backup
+Backing up C:\Users\yourname\.khronos.db to C:\Users\yourname\.khronos.db-backup_20250429095331...
+Done.
 ----
 
 === break
