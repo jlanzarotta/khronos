@@ -41,6 +41,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/term"
 
@@ -56,7 +57,7 @@ import (
 var from string
 var to string
 var givenDate string
-var daysOfWeek = map[string]string{}
+var daysOfWeek = map[string]time.Weekday{}
 var roundToMinutes int64
 var exportFilename string = constants.EMPTY
 var _cmd *cobra.Command
@@ -172,21 +173,20 @@ func init() {
 	// reportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	// Populate days of week.
-	daysOfWeek[carbon.Sunday] = "Sunday"
-	daysOfWeek[carbon.Monday] = "Monday"
-	daysOfWeek[carbon.Tuesday] = "Tuesday"
-	daysOfWeek[carbon.Wednesday] = "Wednesday"
-	daysOfWeek[carbon.Thursday] = "Thursday"
-	daysOfWeek[carbon.Friday] = "Friday"
-	daysOfWeek[carbon.Saturday] = "Saturday"
+	daysOfWeek["sunday"] = carbon.Sunday
+	daysOfWeek["monday"] = carbon.Monday
+	daysOfWeek["tuesday"] = carbon.Tuesday
+	daysOfWeek["wednesday"] = carbon.Wednesday
+	daysOfWeek["thursday"] = carbon.Thursday
+	daysOfWeek["friday"] = carbon.Friday
+	daysOfWeek["saturday"] = carbon.Saturday
 }
 
-func parseWeekday(v string) (string, error) {
-	if d, ok := daysOfWeek[v]; ok {
+func parseWeekday(v string) (time.Weekday, error) {
+	if d, ok := daysOfWeek[strings.ToLower(v)]; ok {
 		return d, nil
 	}
-
-	return "**UNKNOWN**", fmt.Errorf("invalid weekday '%s'", v)
+	return -1, fmt.Errorf("invalid weekday '%s'", v)
 }
 
 func plural(count int, singular string) (result string) {
