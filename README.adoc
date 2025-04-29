@@ -410,6 +410,17 @@ Enter Date Time (empty for no change) [2024-04-10T10:32:24-04:00] : 2024-04-10T1
 Commit these changes? (Y/N (yes/no))
 ----
 
+=== backup
+
+The `backup` command tells Khronos that you would like for it to backup your database to a uniquely named _-backup_yyyymmddhhmmss_ backup file.
+
+[source, shell]
+----
+$ k backup
+Backing up C:\Users\yourname\.khronos.db to C:\Users\yourname\.khronos.db-backup_20250429095331...
+Done.
+----
+
 === break
 
 The `break` command tells Khronos that you are going went on a break.  The time associated with breaks are not added to your daily work time.  They are consider under the break classification when doing a `report'.
