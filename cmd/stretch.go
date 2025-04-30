@@ -98,7 +98,9 @@ func runStretch(cmd *cobra.Command, _ []string) {
 		// Yes was enter, so update the latest.
 		var e models.Entry
 		e.Uid = entry.Uid
-		e.EntryDatetime = stretchTime.ToIso8601String()
+		// Make sure we convert it back to UTC before writing it to the database since it was converted to Local when we
+		// displayed it in the prompt.
+		e.EntryDatetime = stretchTime.ToIso8601String(carbon.UTC)
 		db.UpdateEntry(e)
 
 		log.Printf("%s\n", color.GreenString("Last entry was stretched."))
