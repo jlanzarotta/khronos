@@ -45,7 +45,7 @@ import (
 
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"github.com/spf13/viper"
 )
 
@@ -57,7 +57,8 @@ type Database struct {
 
 func New(filename string) *Database {
 	// NOTE: Make sure '_foreign_keys=on' is set or 'DELETE ON CASCADE' will not work.
-	conn, err := sql.Open("sqlite3", filename+"?_loc=UTC&_foreign_keys=on")
+	//conn, err := sql.Open("sqlite3", filename+"?_loc=UTC&_foreign_keys=on")
+	conn, err := sql.Open("sqlite", filename+"?_loc=UTC&_foreign_keys=on")
 	if err != nil {
 		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 		os.Exit(1)
