@@ -226,7 +226,8 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note, addTime.ToIso8601String())
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, pieces[0], note,
+		addTime.ToIso8601String(carbon.UTC))
 
 	// Populate the newly created Entry with its tasks.
 	for i := 1; i < len(pieces); i += 1 {

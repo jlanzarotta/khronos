@@ -113,7 +113,8 @@ func runHello(cmd *cobra.Command, _ []string) {
 	}
 
 	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY, helloTime.ToIso8601String())
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY,
+		helloTime.ToIso8601String(carbon.UTC))
 
 	// Get the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
