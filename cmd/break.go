@@ -93,7 +93,7 @@ func runBreak(cmd *cobra.Command, _ []string) {
 
 	// Create a new Entry.
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.BREAK, note,
-		breakTime.ToIso8601String())
+		breakTime.ToIso8601String(carbon.UTC))
 
 	log.Printf("%s %s.\n", color.GreenString(constants.ADDING), entry.Dump(false, 0))
 
