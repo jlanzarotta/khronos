@@ -164,7 +164,7 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// No config file, just use defaults.
 			viper.SafeWriteConfig()
-			//writeDefaultFavorites(home)
+            viper.ReadInConfig()
 			writeDefaultFavorites(viper.ConfigFileUsed())
 			log.Printf("%s: Unable to load config file, using/writing default values to [%s].\n\n",
 				color.HiBlueString(constants.INFO_NORMAL_CASE), viper.ConfigFileUsed())
