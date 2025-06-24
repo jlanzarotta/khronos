@@ -110,3 +110,4 @@ scoops:
     repository:
       owner: jlanzarotta
       name: scoops
+    directory: bucket
