@@ -51,11 +51,11 @@ You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khrono
 
 [source, shell]
 ----
-# Add the khronos bucket.
-> scoop bucket add khronos https://github.com/jlanzarotta/scoop-khronos
+# Add my scoops.
+> scoop bucket add jlanzarotta https://github.com/jlanzarotta/scoops
 
 # Install khronos.
-> scoop install khronos
+> scoop install jlanzarotta/khronos
 ----
 
 I personally like to alias the Khronos executable (khronos.exe) to a simple

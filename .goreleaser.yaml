@@ -102,10 +102,10 @@ release:
     **Full Changelog**: https://github.com/jlanzarotta/khronos/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 scoops:
-  - repository:
-      owner: jlanzarotta
-      name: scoop-khronos
-    directory: bucket
-    homepage: "https://github.com/jlanzarotta/khronos"
+  - name: khronos
     description: "Simple time tracker written in Go."
+    homepage: "https://github.com/jlanzarotta/khronos"
     license: BSD-3-Clause
+    repository:
+      owner: jlanzarotta
+      name: scoops
