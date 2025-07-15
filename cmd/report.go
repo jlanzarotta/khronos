@@ -253,7 +253,7 @@ func reportByDay(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-    setReportTableStyle(t)
+	setReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
@@ -288,7 +288,7 @@ func reportByEntry(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-    setReportTableStyle(t)
+	setReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 
@@ -362,7 +362,7 @@ func reportByProject(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-    setReportTableStyle(t)
+	setReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
@@ -391,16 +391,18 @@ func reportByTask(entries []models.Entry) {
 	var consolidateByTask map[string]models.Task = make(map[string]models.Task)
 	for _, entry := range entries {
 		var task = entry.GetTasksAsString()
-		consolidated, found := consolidateByTask[task]
+		var project = entry.Project
+		var key = task + project
+		consolidated, found := consolidateByTask[key]
 		if found {
 			consolidated.Duration += round(entry.Duration)
-			consolidateByTask[task] = consolidated
+			consolidateByTask[key] = consolidated
 		} else {
 			var newTask models.Task = models.NewTask(task)
 			newTask.Duration = round(entry.Duration)
 			newTask.AddTaskProperty(constants.PROJECT, entry.Project)
 			newTask.AddTaskProperty(constants.URL, entry.GetUrlAsString())
-			consolidateByTask[task] = newTask
+			consolidateByTask[key] = newTask
 		}
 	}
 
@@ -415,7 +417,7 @@ func reportByTask(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-    setReportTableStyle(t)
+	setReportTableStyle(t)
 
 	if !urlFound {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
@@ -480,41 +482,41 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 }
 
 func setReportTableStyle(t table.Writer) {
-    t.SetStyle(table.Style{
-        Name: "ReportStyle",
-        Box: table.BoxStyle{
-            MiddleHorizontal: "-",
-            MiddleSeparator:  "+",
-            MiddleVertical:   "|",
-            PaddingLeft:      " ",
-            PaddingRight:     " ",
-        },
-        Color: table.ColorOptions{
-            Row: text.Colors{text.BgBlack, text.FgWhite},
-            RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
-            Separator: text.Colors{text.BgBlack, text.FgHiWhite},
-        },
-        Format: table.FormatOptions{
-            Header: text.FormatUpper,
-            Row:    text.FormatDefault,
-        },
-        Options: table.Options{
-            DrawBorder:      false,
-            SeparateColumns: true,
-            SeparateFooter:  false,
-            SeparateHeader:  true,
-            SeparateRows:    false,
-        },
-    })
+	t.SetStyle(table.Style{
+		Name: "ReportStyle",
+		Box: table.BoxStyle{
+			MiddleHorizontal: "-",
+			MiddleSeparator:  "+",
+			MiddleVertical:   "|",
+			PaddingLeft:      " ",
+			PaddingRight:     " ",
+		},
+		Color: table.ColorOptions{
+			Row:          text.Colors{text.BgBlack, text.FgWhite},
+			RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
+			Separator:    text.Colors{text.BgBlack, text.FgHiWhite},
+		},
+		Format: table.FormatOptions{
+			Header: text.FormatUpper,
+			Row:    text.FormatDefault,
+		},
+		Options: table.Options{
+			DrawBorder:      false,
+			SeparateColumns: true,
+			SeparateFooter:  false,
+			SeparateHeader:  true,
+			SeparateRows:    false,
+		},
+	})
 
-    // For the TOTAL line, make sure we highlight it correctly.
-    t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
-        switch row[2] {
-            case constants.TOTAL:
-                return text.Colors{text.BgBlack, text.FgHiWhite}
-        }
-        return nil
-    }))
+	// For the TOTAL line, make sure we highlight it correctly.
+	t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
+		switch row[2] {
+		case constants.TOTAL:
+			return text.Colors{text.BgBlack, text.FgHiWhite}
+		}
+		return nil
+	}))
 }
 
 func round(durationInSeconds int64) (result int64) {
