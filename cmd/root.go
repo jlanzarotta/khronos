@@ -53,7 +53,7 @@ var note string
 var rootCmd = &cobra.Command{
 	Use:   "khronos",
 	Short: constants.ROOT_SHORT_DESCRIPTION,
-	Long:  constants.ROOT_LONG_DESCRIPTION,
+	Long:  color.YellowString(KhronosTitle()) + "\n\n" + constants.ROOT_LONG_DESCRIPTION,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -164,7 +164,7 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// No config file, just use defaults.
 			viper.SafeWriteConfig()
-            viper.ReadInConfig()
+			viper.ReadInConfig()
 			writeDefaultFavorites(viper.ConfigFileUsed())
 			log.Printf("%s: Unable to load config file, using/writing default values to [%s].\n\n",
 				color.HiBlueString(constants.INFO_NORMAL_CASE), viper.ConfigFileUsed())
@@ -237,4 +237,15 @@ func writeDefaultFavorites(home string) {
 			log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 		}
 	}
+}
+
+func KhronosTitle() string {
+	art := `
+  _  __  _
+ | |/ / | |__    _ __    ___    _ __     ___    ___
+ | ' /  | '_ \  | '__|  / _ \  | '_ \   / _ \  / __|
+ | . \  | | | | | |    | (_) | | | | | | (_) | \__ \
+ |_|\_\ |_| |_| |_|     \___/  |_| |_|  \___/  |___/`
+
+	return art
 }
