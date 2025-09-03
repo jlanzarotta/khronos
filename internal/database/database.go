@@ -45,8 +45,8 @@ import (
 
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
-	_ "modernc.org/sqlite"
 	"github.com/spf13/viper"
+	_ "modernc.org/sqlite"
 )
 
 type Database struct {
@@ -200,14 +200,14 @@ func (db *Database) InsertNewEntry(entry models.Entry) {
 	}
 }
 
-func (db *Database) GetDistinctUIDs(start carbon.Carbon, end carbon.Carbon) []DistinctUID {
+func (db *Database) GetDistinctUIDs(start carbon.Carbon, end carbon.Carbon, project string) []DistinctUID {
 	results, err := db.Conn.Query(`
 		SELECT DISTINCT
 			e.uid, e.project, e.entry_datetime
 		FROM entry e
-		WHERE e.entry_datetime BETWEEN ? AND ?
+		WHERE (e.entry_datetime BETWEEN ? AND ?) AND (? = '' OR e.project = ?)
 		ORDER BY entry_datetime;
-		`, start.ToIso8601String(), end.ToIso8601String(),
+		`, start.ToIso8601String(), end.ToIso8601String(), project, project,
 	)
 
 	if err != nil {

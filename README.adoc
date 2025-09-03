@@ -745,6 +745,15 @@ By specifying the option `--date`, this tells Khronos you would like the report 
 $ k report --date 2024-10-11
 ----
 
+===== --project
+
+By specifying the option `--project`, this tells Khronos you would like the report specifically for the given project.
+
+[source, shell]
+----
+$ k report --project foobar
+----
+
 ===== --no-rounding
 
 By specifying the option `--no-rounding`, this tells Khronos you would the all the duration to be their original, unrounded values.  This option is good it you have durations that are less than the value you have configured for rounding.

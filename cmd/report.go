@@ -57,6 +57,7 @@ import (
 var from string
 var to string
 var givenDate string
+var project string
 var daysOfWeek = map[string]time.Weekday{}
 var roundToMinutes int64
 var exportFilename string = constants.EMPTY
@@ -152,6 +153,7 @@ func init() {
 	reportCmd.Flags().BoolP(constants.FLAG_PREVIOUS_WEEK, constants.EMPTY, false, "Report on the previous week's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_YESTERDAY, constants.EMPTY, false, "Report on yesterday's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_TODAY, constants.EMPTY, false, "Report on today's entries.")
+	reportCmd.Flags().StringVarP(&project, constants.FLAG_PROJECT, constants.EMPTY, constants.EMPTY, "Report on a specific project.")
 	reportCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "Report on the given day's entries in "+constants.DATE_FORMAT+" format.")
 	reportCmd.Flags().BoolP(constants.FLAG_LAST_ENTRY, constants.EMPTY, false, "Display the last entry's information.")
 	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
@@ -554,6 +556,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	lastEntry, _ := cmd.Flags().GetBool(constants.FLAG_LAST_ENTRY)
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
+	project, _ := cmd.Flags().GetString(constants.FLAG_PROJECT)
 
 	var now carbon.Carbon = *carbon.Now()
 	var start carbon.Carbon = *now.Copy()
@@ -604,7 +607,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 	// Get the unique UIDs between the specified start and end dates.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
-	var distinctUIDs []database.DistinctUID = db.GetDistinctUIDs(start, end)
+	var distinctUIDs []database.DistinctUID = db.GetDistinctUIDs(start, end, project)
 
 	if viper.GetBool(constants.DEBUG) {
 		log.Printf("\n*****\nGetDistinctUIDs returned...\n*****\n")
@@ -735,7 +738,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	// Check iff the user wants 24h formatted time.
+	// Check if the user wants 24h formatted time.
 	if viper.GetBool(constants.DISPLAY_TIME_IN_24H_FORMAT) {
 		startEndTimeFormat = constants.CARBON_START_END_TIME_24H_FORMAT
 	}

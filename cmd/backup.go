@@ -47,10 +47,10 @@ import (
 var BUFFERSIZE int64 = 1024
 
 var backupCmd = &cobra.Command{
-	Use:     constants.COMMAND_BACKUP,
-	Args:    cobra.ExactArgs(0),
-	Short:   constants.BACKUP_SHORT_DESCRIPTION,
-	Long:    constants.BACKUP_LONG_DESCRIPTION,
+	Use:   constants.COMMAND_BACKUP,
+	Args:  cobra.ExactArgs(0),
+	Short: constants.BACKUP_SHORT_DESCRIPTION,
+	Long:  constants.BACKUP_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runBackup(args)
 	},
@@ -63,7 +63,7 @@ func init() {
 func runBackup(_ []string) {
 	var databaseFilename string = viper.GetString(constants.DATABASE_FILE)
 	dir, file := filepath.Split(databaseFilename)
-	var backupFilename = filepath.Join(dir, file + "-backup_" + carbon.Now(carbon.Local).ToShortDateTimeString())
+	var backupFilename = filepath.Join(dir, file+"-backup_"+carbon.Now(carbon.Local).ToShortDateTimeString())
 	log.Printf("Backing up %s to %s...", databaseFilename, backupFilename)
 	err := backup(databaseFilename, backupFilename, BUFFERSIZE)
 	if err != nil {
@@ -101,10 +101,6 @@ func backup(src, dst string, BUFFERSIZE int64) error {
 		return err
 	}
 	defer destination.Close()
-
-	if err != nil {
-		panic(err)
-	}
 
 	buf := make([]byte, BUFFERSIZE)
 	for {
