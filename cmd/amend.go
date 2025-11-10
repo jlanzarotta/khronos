@@ -132,10 +132,10 @@ func runAmend(cmd *cobra.Command, _ []string) {
 
 	newNote := prompt(constants.NOTE_NORMAL_CASE, entry.Note)
 
-	// If there was an URL, prompt to change it.
-	var newURL string = constants.EMPTY
-	if len(entry.GetUrlAsString()) > 0 {
-		newURL = prompt(constants.URL_NORMAL_CASE, entry.GetUrlAsString())
+	// If there was an TICKET, prompt to change it.
+	var newTicket string = constants.EMPTY
+	if len(entry.GetTicketAsString()) > 0 {
+		newTicket = prompt(constants.TICKET_NORMAL_CASE, entry.GetTicketAsString())
 	}
 
 	newEntryDatetime := prompt(constants.DATE_TIME_NORMAL_CASE, carbon.Parse(entry.EntryDatetime).ToIso8601String(carbon.Local))
@@ -158,8 +158,8 @@ func runAmend(cmd *cobra.Command, _ []string) {
 	t.AppendRow(table.Row{constants.TASK_NORMAL_CASE, entry.GetTasksAsString(), newTask})
 	t.AppendRow(table.Row{constants.NOTE_NORMAL_CASE, entry.Note, newNote})
 
-	if len(newURL) > 0 {
-		t.AppendRow(table.Row{constants.URL_NORMAL_CASE, entry.GetUrlAsString(), newURL})
+	if len(newTicket) > 0 {
+		t.AppendRow(table.Row{constants.TICKET_NORMAL_CASE, entry.GetTicketAsString(), newTicket})
 	}
 
 	t.AppendRow(table.Row{constants.DATE_TIME_NORMAL_CASE,
@@ -179,8 +179,8 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		e.EntryDatetime = carbon.Parse(newEntryDatetime).ToIso8601String()
 		e.AddEntryProperty(constants.TASK, newTask)
 
-		if len(newURL) > 0 {
-			e.AddEntryProperty(constants.URL, newURL)
+		if len(newTicket) > 0 {
+			e.AddEntryProperty(constants.TICKET, newTicket)
 		}
 
 		db.UpdateEntry(e)

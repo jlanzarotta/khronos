@@ -34,12 +34,14 @@ import (
 	"errors"
 	"khronos/constants"
 	"khronos/internal/database"
+	"khronos/internal/jira"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/agrison/go-commons-lang/stringUtils"
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -197,6 +199,17 @@ func initConfig() {
 
 	// Set the default carbon settings. These settings affect each time we ask carbon to create a new instance.
 	carbon.SetTimezone(carbon.UTC)
+
+	if !strings.EqualFold(viper.GetString(constants.PUSH_TYPE), constants.PUSH_TYPE_JIRA) {
+		log.Fatalf("%s: Invalid push type.  Please correct your configuration.\n", color.RedString(constants.FATAL_NORMAL_CASE))
+		os.Exit(1)
+	}
+
+	if !stringUtils.IsBlank(viper.GetString(constants.PUSH_URL)) {
+		jira.JiraPushUrl = viper.GetString(constants.PUSH_URL)
+		jira.JiraLogWorkToTicketUrl = jira.JiraPushUrl + constants.PUSH_JIRA_V3_URL_TEMPLATE
+		jira.JiraBrowseTicketUrl = jira.JiraPushUrl + "/browse/%s"
+	}
 }
 
 func writeDefaultFavorites(home string) {

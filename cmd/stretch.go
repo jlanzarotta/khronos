@@ -90,7 +90,7 @@ func runStretch(cmd *cobra.Command, _ []string) {
 	// Create the prompt.
 	var prompt string = "Would you like to stretch the last entry\n" + entry.Dump(true, constants.INDENT_AMOUNT)
 	prompt = prompt + "\n\nto " + stretchTime.ToIso8601String(carbon.Local) + " which is a difference of " +
-	secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false) + "?"
+		secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false) + "?"
 
 	// Ask the user if they actually want to stretch the last entry or not.
 	yesNo := yesNoPrompt(prompt)
@@ -109,14 +109,13 @@ func runStretch(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func yesNoPrompt(label string) bool {
-	choices := "Y/N (yes/no)"
-
+func yesNoPrompt(format string, args ...any) bool {
 	r := bufio.NewReader(os.Stdin)
 	var s string
 
 	for {
-		fmt.Fprintf(os.Stderr, "%s (%s) > ", label, choices)
+		fmt.Printf(format, args...)
+		fmt.Print(" Y/N (yes/no) > ")
 		s, _ = r.ReadString('\n')
 		s = strings.TrimSpace(s)
 		s = strings.ToLower(s)

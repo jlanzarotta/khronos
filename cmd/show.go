@@ -44,6 +44,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"khronos/internal/database"
+	"khronos/internal/jira"
 	"khronos/internal/models"
 )
 
@@ -71,7 +72,7 @@ type Configuration struct {
 type Favorite struct {
 	Favorite    string `yaml:"favorite"`
 	Description string `yaml:"description"`
-	URL         string `yaml:"url"`
+	Ticket      string `yaml:"ticket"`
 	RequireNote bool   `default:"false" yaml:"require_note"`
 }
 
@@ -123,11 +124,11 @@ func showFavorites() {
 
 	log.Printf("Favorites found in configuration file[%s]:\n\n", viper.ConfigFileUsed())
 
-	var urlFound bool = false
+	var ticketFound bool = false
 	var descriptionFound bool = false
 	for _, f := range config.Favorites {
-		if len(f.URL) > 0 {
-			urlFound = true
+		if len(f.Ticket) > 0 {
+			ticketFound = true
 		}
 
 		if len(f.Description) > 0 {
@@ -135,50 +136,50 @@ func showFavorites() {
 		}
 	}
 
-    t.SetStyle(table.Style{
-        Name: "ShowFavorites",
-        Box: table.BoxStyle{
-            MiddleHorizontal: "-",
-            MiddleSeparator:  "+",
-            MiddleVertical:   "|",
-            PaddingLeft:      " ",
-            PaddingRight:     " ",
-        },
-        Color: table.ColorOptions{
-            IndexColumn:     text.Colors{text.BgCyan, text.FgBlack},
-            Row:               text.Colors{text.BgBlack, text.FgWhite},
-            RowAlternate:      text.Colors{text.BgBlack, text.FgHiWhite},
-        },
-        Format: table.FormatOptions{
-            Header: text.FormatUpper,
-            Row:    text.FormatDefault,
-        },
-        Options: table.Options{
-            DrawBorder:      false,
-            SeparateColumns: true,
-            SeparateFooter:  false,
-            SeparateHeader:  true,
-            SeparateRows:    false,
-        },
-    })
+	t.SetStyle(table.Style{
+		Name: "ShowFavorites",
+		Box: table.BoxStyle{
+			MiddleHorizontal: "-",
+			MiddleSeparator:  "+",
+			MiddleVertical:   "|",
+			PaddingLeft:      " ",
+			PaddingRight:     " ",
+		},
+		Color: table.ColorOptions{
+			IndexColumn:  text.Colors{text.BgCyan, text.FgBlack},
+			Row:          text.Colors{text.BgBlack, text.FgWhite},
+			RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
+		},
+		Format: table.FormatOptions{
+			Header: text.FormatUpper,
+			Row:    text.FormatDefault,
+		},
+		Options: table.Options{
+			DrawBorder:      false,
+			SeparateColumns: true,
+			SeparateFooter:  false,
+			SeparateHeader:  true,
+			SeparateRows:    false,
+		},
+	})
 
-	if descriptionFound && urlFound {
+	if descriptionFound && ticketFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else if descriptionFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.REQUIRE_NOTE_WITH_ASTERISK})
-	} else if urlFound {
+	} else if ticketFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	} else {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.REQUIRE_NOTE_WITH_ASTERISK})
 	}
 
 	for i, f := range config.Favorites {
-		if descriptionFound && urlFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.URL, f.RequireNote})
+		if descriptionFound && ticketFound {
+			t.AppendRow(table.Row{i, f.Favorite, f.Description, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
 		} else if descriptionFound {
 			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.RequireNote})
-		} else if urlFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.URL, f.RequireNote})
+		} else if ticketFound {
+			t.AppendRow(table.Row{i, f.Favorite, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
 		} else {
 			t.AppendRow(table.Row{i, f.Favorite, f.RequireNote})
 		}

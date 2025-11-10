@@ -43,6 +43,7 @@ import (
 	"khronos/constants"
 	"khronos/internal/models"
 
+	"github.com/agrison/go-commons-lang/stringUtils"
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/spf13/viper"
@@ -102,7 +103,7 @@ func (db *Database) Create() {
 }
 
 func (db *Database) ConvertAllEntriesToUTC() {
-	var s string = fmt.Sprintf("SELECT e.uid, e.project, e.note, e.entry_datetime FROM entry e ORDER BY e.uid;")
+	var s string = "SELECT e.uid, e.project, e.note, e.entry_datetime FROM entry e ORDER BY e.uid;"
 	results, err := db.Conn.Query(s)
 	if err != nil {
 		log.Fatalf("%s: Error trying to retrieve Entry records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
@@ -724,14 +725,14 @@ func (db *Database) UpdateEntry(entry models.Entry) {
 		}
 	}
 
-	// Update the URL property if one exists.
-	var url = entry.GetUrlAsString()
-	if len(url) > 0 {
+	// Update the TICKET property if one exists.
+	var ticket = entry.GetTicketAsString()
+	if !stringUtils.IsBlank(ticket) {
 		query.Reset()
 		query.WriteString("UPDATE property")
 		query.WriteString(" SET")
-		query.WriteString(fmt.Sprintf(" value = '%s'", url))
-		query.WriteString(fmt.Sprintf(" WHERE entry_uid = %d and name = '%s';", entry.Uid, constants.URL))
+		query.WriteString(fmt.Sprintf(" value = '%s'", ticket))
+		query.WriteString(fmt.Sprintf(" WHERE entry_uid = %d and name = '%s';", entry.Uid, constants.TICKET))
 
 		if viper.GetBool(constants.DEBUG) {
 			log.Printf("Query[%s]\n", query.String())
@@ -743,5 +744,27 @@ func (db *Database) UpdateEntry(entry models.Entry) {
 			log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
 			os.Exit(1)
 		}
+	}
+}
+
+func (db *Database) UpdateEntryPushed(entryUid int64) {
+	var query strings.Builder
+	var now carbon.Carbon = *carbon.Now()
+
+	// Update the Entry's pushed property.
+	query.WriteString("UPDATE property")
+	query.WriteString(" SET")
+	query.WriteString(fmt.Sprintf(" value = '%s'", now.ToIso8601String(carbon.UTC)))
+	query.WriteString(fmt.Sprintf(" WHERE entry_uid = %d and name = '%s';", entryUid, constants.PUSHED))
+
+	if viper.GetBool(constants.DEBUG) {
+		log.Printf("Query[%s]\n", query.String())
+	}
+
+	// Execute the update.
+	_, err := db.Conn.ExecContext(db.Context, query.String())
+	if err != nil {
+		log.Fatalf("%s: %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
 	}
 }

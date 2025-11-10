@@ -28,77 +28,56 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
-package models
+
+package rest
 
 import (
+	"encoding/base64"
 	"khronos/constants"
-	"strings"
+	"khronos/internal/models"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/agrison/go-commons-lang/stringUtils"
+	"github.com/fatih/color"
+	"github.com/spf13/viper"
 )
 
-type Task struct {
-	Task       string
-	Duration   int64
-	Properties []Property
+// HTTPClient is a default HTTP client, a proxy over http.Client.
+var HTTPClient Client
+
+// Client represents and interface for http.Client. Its main purpose is testing.
+type Client interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewTask(task string) Task {
-	var t Task = Task{task, 0, make([]Property, 0)}
-	return t
+func init() {
+	HTTPClient = &http.Client{Timeout: time.Second * 30}
 }
 
-func (t *Task) AddTaskProperty(name string, value string) {
-	if len(value) > 0 {
-		var found bool = false
-		for _, element := range t.Properties {
-			if strings.EqualFold(element.Name, name) && strings.EqualFold(element.Value, value) {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			var property Property = NewProperty(constants.UNKNOWN_UID, name, value)
-			t.Properties = append(t.Properties, property)
-		}
+func ReadCredentials() models.Credentials {
+	var username string = viper.GetString(constants.PUSH_USERNAME)
+	if stringUtils.IsEmpty(username) {
+		log.Fatalf("%s: Missing push username.  Please correct your configuration.\n", color.RedString(constants.FATAL_NORMAL_CASE))
+		os.Exit(1)
 	}
+
+	var apiKey string = viper.GetString(constants.PUSH_API_KEY)
+	if stringUtils.IsEmpty(apiKey) {
+		log.Fatalf("%s: Missing push api_key.  Please correct your configuration.\n", color.RedString(constants.FATAL_NORMAL_CASE))
+		os.Exit(1)
+	}
+
+	var credentials models.Credentials
+	credentials.Username = username
+	credentials.Password = apiKey
+
+	return credentials
 }
 
-func (e *Task) GetProjectsAsString() string {
-	var result string
-
-	// Count the number of Projects.
-	var projectCount = 0
-	for _, element := range e.Properties {
-		if strings.EqualFold(element.Name, constants.PROJECT) {
-			projectCount += 1
-		}
-	}
-
-	// Append any Projects to the string.
-	for _, element := range e.Properties {
-		if strings.EqualFold(element.Name, constants.PROJECT) {
-			result += element.Value
-		}
-
-		// Count backwards to add our separator.
-		if projectCount > 1 {
-			result += ", "
-			projectCount -= 1
-		}
-	}
-
-	return result
-}
-
-func (e *Task) GetTicketAsString() string {
-	var result string
-
-	for _, element := range e.Properties {
-		if strings.EqualFold(element.Name, constants.TICKET) {
-			result = element.Value
-			break
-		}
-	}
-
-	return result
+func BasicAuth(cred *models.Credentials) string {
+	auth := cred.Username + ":" + cred.Password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }

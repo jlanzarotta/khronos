@@ -28,12 +28,14 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
+
 package models
 
 import (
 	"khronos/constants"
 	"strings"
 
+	"github.com/agrison/go-commons-lang/stringUtils"
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 )
@@ -122,11 +124,24 @@ func (e *Entry) GetTasksAsString() string {
 	return result
 }
 
-func (e *Entry) GetUrlAsString() string {
+func (e *Entry) GetTicketAsString() string {
 	var result string
 
 	for _, element := range e.Properties {
-		if strings.EqualFold(element.Name, constants.URL) {
+		if strings.EqualFold(element.Name, constants.TICKET) {
+			result = element.Value
+			break
+		}
+	}
+
+	return result
+}
+
+func (e *Entry) GetPushedAsString() string {
+	var result string
+
+	for _, element := range e.Properties {
+		if strings.EqualFold(element.Name, constants.PUSHED) {
 			result = element.Value
 			break
 		}
@@ -162,14 +177,14 @@ func (e *Entry) Dump(vertical bool, indent_amount int) string {
 		result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Note") + "[" + e.Note + "]"
 	}
 
-	// Add the URL if there is one.
-	var url = e.GetUrlAsString()
-	if len(url) > 0 {
+	// Add the TICKET if there is one.
+	var ticket = e.GetTicketAsString()
+	if !stringUtils.IsBlank(ticket) {
 		if vertical {
-			result += "\n   "
+			result += "\n"
 		}
 
-		result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" URL") + "[" + url + "]"
+		result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Ticket") + "[" + ticket + "]"
 	}
 
 	// Add the Date.

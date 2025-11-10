@@ -766,7 +766,7 @@ $ k report --previous-week --no-rounding
 
 ==== --export type
 
-By specifying the option '--export', this tells Khronos you would like export the report to one three types, CSV, HTML, and Mark Down.  The default is CSV.
+By specifying the option `--export`, this tells Khronos you would like export the report to one three types, CSV, HTML, and Mark Down.  The default is CSV.
 
 [source, shell]
 ----
@@ -776,6 +776,44 @@ $ k report --export --type md
 ----
 
 These commands will create a unique report file with the extension associated with the type you specified.  CSV produces a file ending in .csv, HTML produces a file ending in .html, and MD produces a file ending in .md.
+
+==== push
+
+By specifying the `--push` option, you tell Khronos that you want to push any unpushed entry's, duration and note, to the associated Jira Ticket's worklog.
+
+In order to be able to push entries to Jira, you first must several extra configuration elements to your _.khronos.yaml_ configuration file.
+
+First, you must add the Jira `push:` configuration. This configuration consists of a `type`, a `url`, a `username`, and an `api_key`.
+
+[source, yaml]
+----
+push:
+  type: jira <1>
+  url: https://some_name.atlassian.net <2>
+  username: username@company.com <3>
+  api_key: <YOUR JIRA API-KEY GOES HERE> <4>
+----
+<1> Must always be jira.
+<2> The URL to get to the Jira instance.
+<3> The username used to log into the Jira instance.
+<4> The Jira API-KEY the username uses to log into the Jira instance.
+
+Next, when you define your <<_favorites>>, you *MUST* specify the `ticket` attribute. The `ticket` attribute tells Khronos that this entry is associated with a specific Jira ticket.
+
+[source, yaml]
+----
+favorites:
+  - favorite: general+office mgnt(acct/hr/purch)
+    require_note: true
+  - favorite: general+training
+    require_note: true
+    ticket: GENERAL-003 <1>
+----
+<1> Tell Khronos that this entry is related to this Jira ticket.
+
+By specifiying the `ticket`, attribute, Khronos will automatically add a `ticket` property to the entry when it is added to the database.
+
+Now that you have the necessary configuration setup, when you use the `--push`, Khronos will use a combination of the push URL along with the Ticket, you push the entry's duration and note to Jira Ticket's worklog. 
 
 === stretch
 

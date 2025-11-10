@@ -31,12 +31,18 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"khronos/constants"
 	"khronos/internal/database"
+	"khronos/internal/jira"
 	"khronos/internal/models"
+	"khronos/internal/rest"
+	"khronos/internal/util"
 	"log"
 	"math"
+	"net/http"
 	"os"
 	"sort"
 	"strconv"
@@ -64,6 +70,7 @@ var exportFilename string = constants.EMPTY
 var _cmd *cobra.Command
 var exportType = models.ExportTypeCSV
 var startEndTimeFormat string = constants.CARBON_START_END_TIME_FORMAT
+var pushCredentials models.Credentials
 
 // reportCmd represents the report command.
 var reportCmd = &cobra.Command{
@@ -153,6 +160,7 @@ func init() {
 	reportCmd.Flags().BoolP(constants.FLAG_PREVIOUS_WEEK, constants.EMPTY, false, "Report on the previous week's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_YESTERDAY, constants.EMPTY, false, "Report on yesterday's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_TODAY, constants.EMPTY, false, "Report on today's entries.")
+	reportCmd.Flags().BoolP(constants.FLAG_PUSH, constants.EMPTY, false, "Push the reported entries that have not yet been pushed.")
 	reportCmd.Flags().StringVarP(&project, constants.FLAG_PROJECT, constants.EMPTY, constants.EMPTY, "Report on a specific project.")
 	reportCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "Report on the given day's entries in "+constants.DATE_FORMAT+" format.")
 	reportCmd.Flags().BoolP(constants.FLAG_LAST_ENTRY, constants.EMPTY, false, "Display the last entry's information.")
@@ -220,13 +228,13 @@ func reportByDay(entries []models.Entry) {
 				}
 
 				// Add the rounded durations together.
-				consolidatedProject.Duration += round(entry.Duration)
+				consolidatedProject.Duration += util.Round(roundToMinutes, entry.Duration)
 
 				// Replace the consolidated entry.
 				consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][entry.Project] = consolidatedProject
 			} else {
 				var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
-				newEntry.Duration = round(entry.Duration)
+				newEntry.Duration = util.Round(roundToMinutes, entry.Duration)
 				newEntry.Properties = entry.Properties
 
 				// Add the new entry.
@@ -235,7 +243,7 @@ func reportByDay(entries []models.Entry) {
 		} else {
 			// Since the EntryDatetime was not found, add it.
 			var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
-			newEntry.Duration = round(entry.Duration)
+			newEntry.Duration = util.Round(roundToMinutes, entry.Duration)
 			newEntry.Properties = entry.Properties
 
 			// Add the new entry.
@@ -266,7 +274,7 @@ func reportByDay(entries []models.Entry) {
 
 		for p, v := range day {
 			t.AppendRow(table.Row{i, p, v.GetTasksAsString(), secondsToHuman(v.Duration, true)})
-			totalPerDay += round(v.Duration)
+			totalPerDay += util.Round(roundToMinutes, v.Duration)
 		}
 
 		if display_by_day_totals {
@@ -300,7 +308,7 @@ func reportByEntry(entries []models.Entry) {
 		t.AppendRow(table.Row{
 			end.Format(constants.CARBON_DATE_FORMAT),
 			start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-			secondsToHuman(round(entry.Duration), true),
+			secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
 			entry.Project,
 			entry.GetTasksAsString(),
 			entry.Note})
@@ -342,11 +350,11 @@ func reportByProject(entries []models.Entry) {
 			if len(entry.GetTasksAsString()) > 0 {
 				consolidated.AddEntryProperty(constants.TASK, entry.GetTasksAsString())
 			}
-			consolidated.Duration += round(entry.Duration)
+			consolidated.Duration += util.Round(roundToMinutes, entry.Duration)
 			consolidatedByProject[entry.Project] = consolidated
 		} else {
 			var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
-			newEntry.Duration = round(entry.Duration)
+			newEntry.Duration = util.Round(roundToMinutes, entry.Duration)
 			if len(entry.GetTasksAsString()) > 0 {
 				newEntry.AddEntryProperty(constants.TASK, entry.GetTasksAsString())
 			}
@@ -397,22 +405,22 @@ func reportByTask(entries []models.Entry) {
 		var key = task + project
 		consolidated, found := consolidateByTask[key]
 		if found {
-			consolidated.Duration += round(entry.Duration)
+			consolidated.Duration += util.Round(roundToMinutes, entry.Duration)
 			consolidateByTask[key] = consolidated
 		} else {
 			var newTask models.Task = models.NewTask(task)
-			newTask.Duration = round(entry.Duration)
+			newTask.Duration = util.Round(roundToMinutes, entry.Duration)
 			newTask.AddTaskProperty(constants.PROJECT, entry.Project)
-			newTask.AddTaskProperty(constants.URL, entry.GetUrlAsString())
+			newTask.AddTaskProperty(constants.TICKET, entry.GetTicketAsString())
 			consolidateByTask[key] = newTask
 		}
 	}
 
-	// Check and see if any entry has a URL property.  If so, add it to the table.
-	var urlFound bool = false
+	// Check and see if any entry has a TICKET property.  If so, add it to the table.
+	var ticketFound bool = false
 	for _, v := range consolidateByTask {
-		if len(v.GetUrlAsString()) > 0 {
-			urlFound = true
+		if len(v.GetTicketAsString()) > 0 {
+			ticketFound = true
 			break
 		}
 	}
@@ -421,7 +429,7 @@ func reportByTask(entries []models.Entry) {
 	var t table.Writer = table.NewWriter()
 	setReportTableStyle(t)
 
-	if !urlFound {
+	if !ticketFound {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 	} else {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.URL_NORMAL_CASE})
@@ -429,10 +437,10 @@ func reportByTask(entries []models.Entry) {
 
 	// Populate the table.
 	for _, v := range consolidateByTask {
-		if !urlFound {
+		if !ticketFound {
 			t.AppendRow(table.Row{v.Task, v.GetProjectsAsString(), secondsToHuman(v.Duration, true)})
 		} else {
-			t.AppendRow(table.Row{v.Task, v.GetProjectsAsString(), secondsToHuman(v.Duration, true), v.GetUrlAsString()})
+			t.AppendRow(table.Row{v.Task, v.GetProjectsAsString(), secondsToHuman(v.Duration, true), jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, v.GetTicketAsString())})
 		}
 	}
 
@@ -450,9 +458,9 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 	// Calculate total time worked and total times on break.
 	for _, entry := range entries {
 		if strings.EqualFold(entry.Project, constants.BREAK) {
-			totalBreakDuration += round(entry.Duration)
+			totalBreakDuration += util.Round(roundToMinutes, entry.Duration)
 		} else {
-			totalWorkDuration += round(entry.Duration)
+			totalWorkDuration += util.Round(roundToMinutes, entry.Duration)
 		}
 	}
 
@@ -521,21 +529,6 @@ func setReportTableStyle(t table.Writer) {
 	}))
 }
 
-func round(durationInSeconds int64) (result int64) {
-	var seconds int64 = durationInSeconds
-
-	if roundToMinutes > 0 {
-		var remainder int64 = seconds % (roundToMinutes * 60)
-		seconds -= remainder
-		if remainder/6000 >= 8 {
-			// Round up since we are over the threshold of precision.
-			seconds = seconds + roundToMinutes*60
-		}
-	}
-
-	return (seconds)
-}
-
 func runReport(cmd *cobra.Command, _ []string) {
 	// Save this so we can use it in other methods.
 	_cmd = cmd
@@ -552,11 +545,17 @@ func runReport(cmd *cobra.Command, _ []string) {
 	currentWeek, _ := cmd.Flags().GetBool(constants.FLAG_CURRENT_WEEK)
 	previousWeek, _ := cmd.Flags().GetBool(constants.FLAG_PREVIOUS_WEEK)
 	yesterday, _ := cmd.Flags().GetBool(constants.FLAG_YESTERDAY)
+	push, _ := cmd.Flags().GetBool(constants.FLAG_PUSH)
 	givenDateStr, _ := cmd.Flags().GetString(constants.FLAG_DATE)
 	lastEntry, _ := cmd.Flags().GetBool(constants.FLAG_LAST_ENTRY)
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 	project, _ := cmd.Flags().GetString(constants.FLAG_PROJECT)
+
+	// If we are supposed to push report items, validate that we first valid push configuration.
+	if push {
+		pushCredentials = validatePush()
+	}
 
 	var now carbon.Carbon = *carbon.Now()
 	var start carbon.Carbon = *now.Copy()
@@ -763,6 +762,85 @@ func runReport(cmd *cobra.Command, _ []string) {
 
 	if viper.GetBool(constants.REPORT_BY_DAY) {
 		reportByDay(entries)
+	}
+
+	// If the user has asked to push these updates to the server, do so.
+	if push {
+		pushEntries(db, entries)
+	}
+}
+
+func validatePush() models.Credentials {
+	return rest.ReadCredentials()
+}
+
+type HttpRequest struct {
+	EntryUid int64
+	Request  *http.Request
+}
+
+func pushEntries(db *database.Database, entries []models.Entry) {
+	var httpRequests []HttpRequest
+
+	// Collect unpushed requests.
+	var payloads []jira.JiraRequest = jira.JiraNewRequests(roundToMinutes, entries)
+
+	// Were there any unpushed requests found? If so, process them.
+	if len(payloads) > 0 {
+		// Transform all the unpushed Jira requests into HTTP requests.
+		for _, payload := range payloads {
+			request, _ := http.NewRequest("POST", jira.FormatJiraUrl(jira.JiraLogWorkToTicketUrl, payload.Ticket), bytes.NewBuffer(payload.Payload))
+			request.Header.Add("Authorization", fmt.Sprintf("Basic %v", rest.BasicAuth(&pushCredentials)))
+			request.Header.Add("Content-Type", "application/json")
+			var httpRequest HttpRequest = HttpRequest{EntryUid: payload.EntryUid, Request: request}
+			httpRequests = append(httpRequests, httpRequest)
+		}
+
+		// If in debug, dump all the HTTP requests to the screen.
+		if viper.GetBool(constants.DEBUG) {
+			log.Printf("\n*****\nDumping all HTTP requests...\n*****\n")
+			for _, httpRequest := range httpRequests {
+				log.Printf("Entry UID: %d Request: %v\n", httpRequest.EntryUid, httpRequest.Request)
+			}
+		}
+
+		// Ask the user if they want to push these changes or not.
+		yesNo := yesNoPrompt("\nThere are %d unpushed entries. Push them to the server?", len(payloads))
+		if yesNo {
+			// Yep...
+			for _, httpRequest := range httpRequests {
+				result, err := rest.HTTPClient.Do(httpRequest.Request)
+				if err != nil {
+					log.Fatalf("%s: Failed to send %v: %v\n", color.RedString(constants.FATAL_NORMAL_CASE), httpRequest, err)
+					os.Exit(1)
+				}
+				defer result.Body.Close()
+				body, err := io.ReadAll(result.Body)
+				if err != nil {
+					log.Fatalf("%s: Failed to read %v\n", color.RedString(constants.FATAL_NORMAL_CASE), err)
+					os.Exit(1)
+				}
+
+				if viper.GetBool(constants.DEBUG) {
+					log.Printf("Jira Server responded: %v\n{%q}\n", result.Status, body)
+				}
+
+				// On success, update the entries 'pushed' property.
+				if result.StatusCode == 201 {
+					db.UpdateEntryPushed(httpRequest.EntryUid)
+				} else {
+					log.Fatalf("%s: For Entry[uid[%d]] Jira Server responded: %v\n{%q}\n",
+						color.RedString(constants.FATAL_NORMAL_CASE),
+						httpRequest.EntryUid, result.Status, body)
+					os.Exit(1)
+				}
+			}
+
+			log.Printf("%s\n", color.GreenString("Entries pushed."))
+		} else {
+			// Nope.
+			log.Printf("%s\n", color.YellowString("Entries NOT pushed."))
+		}
 	}
 }
 

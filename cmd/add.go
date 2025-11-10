@@ -148,7 +148,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	var projectTask string = constants.EMPTY
-	var url string = constants.EMPTY
+	var ticket string = constants.EMPTY
 	var requiredNote bool = false
 	var favoritesNotDisplayed bool = false
 
@@ -157,7 +157,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	if favorite != -999 {
 		var fav Favorite = getFavorite(favorite)
 		projectTask = fav.Favorite
-		url = fav.URL
+		ticket = fav.Ticket
 		requiredNote = fav.RequireNote
 		favoritesNotDisplayed = true
 	} else {
@@ -190,13 +190,13 @@ func runAdd(cmd *cobra.Command, args []string) {
 				// Convert the string to an integer, thus validating the user entered a number.
 				i, err := strconv.Atoi(s)
 				if err != nil {
-		            log.Printf("%s.\n\n", color.RedString("Invalid number entered"))
+					log.Printf("%s.\n\n", color.RedString("Invalid number entered"))
 					continue
 				}
 
 				var fav Favorite = getFavorite(i)
 				projectTask = fav.Favorite
-				url = fav.URL
+				ticket = fav.Ticket
 				requiredNote = fav.RequireNote
 				break
 			}
@@ -234,9 +234,10 @@ func runAdd(cmd *cobra.Command, args []string) {
 		entry.AddEntryProperty(constants.TASK, pieces[i])
 	}
 
-	// If a URL was configured for this project+task, add it to the entry.
-	if len(url) > 0 {
-		entry.AddEntryProperty(constants.URL, url)
+	// If a Ticket was configured for this project+task, add it to the entry.
+	if !stringUtils.IsBlank(ticket) {
+		entry.AddEntryProperty(constants.TICKET, ticket)
+		entry.AddEntryProperty(constants.PUSHED, constants.EMPTY)
 	}
 
 	log.Printf("%s%s.\n", color.GreenString(constants.ADDING), entry.Dump(true, constants.INDENT_AMOUNT))
