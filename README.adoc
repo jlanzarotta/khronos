@@ -322,27 +322,6 @@ favorites:
 .
 ----
 
-==== url
-
-An optional URL can be added to a favorite. This URL will show up on various commands and reports. This URL can be uses to a link to JIRA or any website you need to have linked to favorite.
-
-Here is an example:
-
-[source,properties]
-----
-favorites:
-  - favorite: general+training
-  - favorite: general+product development
-  - favorite: general+personal time
-  - favorite: general+holiday
-  - favorite: general+vacation/PTO/Comp
-  - favorite: project1+screen coding task
-    url: https://jira.yourcompany.com/task/sreen_coding_task
-.
-.
-.
-----
-
 ==== require_note
 
 An optional `required_note` can be added to a favorite. This flag tells Khronos that you want to require the prompting of a note for this specific favorite.
@@ -552,20 +531,20 @@ Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 * May be overridden by global configuration setting
 ----
 
-If one or more of your favorites have an associated URL, your favorites will be shown like this:
+If one or more of your favorites have an associated Jira Ticket, your favorites will be shown like this:
 
 [source, shell]
 ----
 $ k show --favorites
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK                | URL                       | REQUIRE NOTE*
----+-----------------------------+---------------------------+---------------
- 0 | general+training            | https://yoursite.com/url1 | false
- 1 | general+product development | https://yoursite.com/url2 | false
- 2 | general+personal time       |                           | false
- 3 | general+holiday             |                           | false
- 4 | general+vacation/PTO/Comp   |                           | false
+ # | PROJECT+TASK                | URL                         | REQUIRE NOTE*
+---+-----------------------------+-----------------------------+---------------
+ 0 | general+training            | https://yoursite.com/TICKET | false
+ 1 | general+product development | https://yoursite.com/TICKET | false
+ 2 | general+personal time       |                             | false
+ 3 | general+holiday             |                             | false
+ 4 | general+vacation/PTO/Comp   |                             | false
 
 * May be overridden by global configuration setting
 ----
@@ -577,13 +556,13 @@ If one or more of your favorites have an associated description, your favorites 
 $ k show --favorites
 Favorites found in configuration file[C:\Users\yourname\.khronos.yaml]:
 
- # | PROJECT+TASK                | DESCRIPTION | URL                       | REQUIRE NOTE*
----+-----------------------------+-------------+---------------------------+---------------
- 0 | general+training            | Training    | https://yoursite.com/url1 | false
- 1 | general+product development |             | https://yoursite.com/url2 | false
- 2 | general+personal time       |             |                           | false
- 3 | general+holiday             |             |                           | false
- 4 | general+vacation/PTO/Comp   |             |                           | false
+ # | PROJECT+TASK                | DESCRIPTION | URL                         | REQUIRE NOTE*
+---+-----------------------------+-------------+-----------------------------+---------------
+ 0 | general+training            | Training    | https://yoursite.com/TICKET | false
+ 1 | general+product development |             | https://yoursite.com/TICKET | false
+ 2 | general+personal time       |             |                             | false
+ 3 | general+holiday             |             |                             | false
+ 4 | general+vacation/PTO/Comp   |             |                             | false
 
 * May be overridden by global configuration setting
 ----
