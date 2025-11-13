@@ -187,6 +187,16 @@ func (e *Entry) Dump(vertical bool, indent_amount int) string {
 		result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Ticket") + "[" + ticket + "]"
 	}
 
+	// Add the PUSHED if there is one.
+	var pushed = e.GetPushedAsString()
+	if !stringUtils.IsBlank(pushed) {
+		if vertical {
+			result += "\n"
+		}
+
+		result += strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString(" Pushed") + "[" + pushed + "]"
+	}
+
 	// Add the Date.
 	if vertical {
 		result += "\n  "

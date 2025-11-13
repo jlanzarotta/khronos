@@ -102,3 +102,16 @@ func (e *Task) GetTicketAsString() string {
 
 	return result
 }
+
+func (e *Task) GetPushedAsString() string {
+	var result string
+
+	for _, element := range e.Properties {
+		if strings.EqualFold(element.Name, constants.PUSHED) {
+			result = element.Value
+			break
+		}
+	}
+
+	return result
+}

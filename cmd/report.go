@@ -300,18 +300,50 @@ func reportByEntry(entries []models.Entry) {
 	var t table.Writer = table.NewWriter()
 	setReportTableStyle(t)
 
-	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
+	var ticketFound bool = false
+	for _, entry := range entries {
+		if !stringUtils.IsEmpty(entry.GetTicketAsString()) {
+			ticketFound = true
+			break
+		}
+	}
+
+	if !ticketFound {
+		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
+	} else {
+		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.PUSHED_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
+	}
 
 	for _, entry := range entries {
 		var end carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
 		var start carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local).SubSeconds(int(entry.Duration))
-		t.AppendRow(table.Row{
-			end.Format(constants.CARBON_DATE_FORMAT),
-			start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-			secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
-			entry.Project,
-			entry.GetTasksAsString(),
-			entry.Note})
+
+		var pushed string = constants.EMPTY
+		if !stringUtils.IsBlank(entry.GetTicketAsString()) {
+			pushed = entry.GetPushedAsString()
+			if stringUtils.IsBlank(pushed) {
+				pushed = "No"
+			}
+		}
+
+		if !ticketFound {
+			t.AppendRow(table.Row{
+				end.Format(constants.CARBON_DATE_FORMAT),
+				start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
+				secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
+				entry.Project,
+				entry.GetTasksAsString(),
+				entry.Note})
+		} else {
+			t.AppendRow(table.Row{
+				end.Format(constants.CARBON_DATE_FORMAT),
+				start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
+				secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
+				entry.Project,
+				entry.GetTasksAsString(),
+				pushed,
+				entry.Note})
+		}
 	}
 
 	// Render the table.
@@ -419,7 +451,7 @@ func reportByTask(entries []models.Entry) {
 	// Check and see if any entry has a TICKET property.  If so, add it to the table.
 	var ticketFound bool = false
 	for _, v := range consolidateByTask {
-		if len(v.GetTicketAsString()) > 0 {
+		if !stringUtils.IsBlank(v.GetTicketAsString()) {
 			ticketFound = true
 			break
 		}
@@ -429,6 +461,7 @@ func reportByTask(entries []models.Entry) {
 	var t table.Writer = table.NewWriter()
 	setReportTableStyle(t)
 
+	// If the ticket property was found on any entry, add the URL to the table header.
 	if !ticketFound {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 	} else {
