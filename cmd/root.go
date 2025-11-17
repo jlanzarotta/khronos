@@ -142,6 +142,9 @@ func initConfig() {
 	// Set 24h time format to false.
 	viper.SetDefault(constants.DISPLAY_TIME_IN_24H_FORMAT, false)
 
+	// Use abbreviated hour to h, minutes to m, and seconds to s.
+	viper.SetDefault(constants.DISPLAY_HMS_ABBREVIATED, false)
+
 	// Set each of the reports to true.
 	viper.SetDefault(constants.REPORT_BY_PROJECT, true)
 	viper.SetDefault(constants.REPORT_BY_TASK, true)

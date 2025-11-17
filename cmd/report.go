@@ -841,35 +841,42 @@ func pushEntries(db *database.Database, entries []models.Entry) {
 		yesNo := yesNoPrompt("\nThere are %d unpushed entries. Push them to the server?", len(payloads))
 		if yesNo {
 			// Yep...
-			for _, httpRequest := range httpRequests {
-				result, err := rest.HTTPClient.Do(httpRequest.Request)
-				if err != nil {
-					log.Fatalf("%s: Failed to send %v: %v\n", color.RedString(constants.FATAL_NORMAL_CASE), httpRequest, err)
-					os.Exit(1)
-				}
-				defer result.Body.Close()
-				body, err := io.ReadAll(result.Body)
-				if err != nil {
-					log.Fatalf("%s: Failed to read %v\n", color.RedString(constants.FATAL_NORMAL_CASE), err)
-					os.Exit(1)
+			err := util.RunWithSpinner("Pushing entries", func() error {
+				// Attempt to push each entry to the server.
+				for _, httpRequest := range httpRequests {
+					result, err := rest.HTTPClient.Do(httpRequest.Request)
+					if err != nil {
+						return fmt.Errorf("failed to send %v: %v", httpRequest, err)
+					}
+					defer result.Body.Close()
+					body, err := io.ReadAll(result.Body)
+					if err != nil {
+						return fmt.Errorf("failed to read %v", err)
+					}
+
+					if viper.GetBool(constants.DEBUG) {
+						log.Printf("Jira Server responded: %v\n{%q}\n", result.Status, body)
+					}
+
+					// On success, update the entries 'pushed' property.
+					if result.StatusCode == 201 {
+						db.UpdateEntryPushed(httpRequest.EntryUid)
+					} else {
+						return fmt.Errorf("for Entry[uid[%d]] Jira Server responded: %v\n{%q}",
+							httpRequest.EntryUid, result.Status, body)
+					}
 				}
 
-				if viper.GetBool(constants.DEBUG) {
-					log.Printf("Jira Server responded: %v\n{%q}\n", result.Status, body)
-				}
+				return nil
+			})
 
-				// On success, update the entries 'pushed' property.
-				if result.StatusCode == 201 {
-					db.UpdateEntryPushed(httpRequest.EntryUid)
-				} else {
-					log.Fatalf("%s: For Entry[uid[%d]] Jira Server responded: %v\n{%q}\n",
-						color.RedString(constants.FATAL_NORMAL_CASE),
-						httpRequest.EntryUid, result.Status, body)
-					os.Exit(1)
-				}
+			// Was any sort of error encountered? I sure hope not.
+			if err != nil {
+				log.Fatalf("%s: %v\n", color.RedString(constants.FATAL_NORMAL_CASE), err)
+				os.Exit(1)
+			} else {
+				log.Printf("%s\n", color.GreenString("Entries pushed."))
 			}
-
-			log.Printf("%s\n", color.GreenString("Entries pushed."))
 		} else {
 			// Nope.
 			log.Printf("%s\n", color.YellowString("Entries NOT pushed."))
@@ -884,6 +891,8 @@ func secondsToHumanFloat(inSeconds float64, hmsOnly bool) (result string) {
 func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 	// If the duration is zero, this means than the rounded value is less than
 	// the "round to minutes" value, simply show a less than message.
+	var abbreviated bool = viper.GetBool(constants.DISPLAY_HMS_ABBREVIATED)
+
 	if inSeconds == 0 {
 		result = "< " + plural(int(roundToMinutes), "minute")
 	} else {
@@ -894,11 +903,23 @@ func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 			seconds := inSeconds % 60
 
 			if hours > 0 {
-				result = plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
+				if abbreviated {
+					result = fmt.Sprintf("%dh %dm %ds", int(hours), int(minutes), int(seconds))
+				} else {
+					result = plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
+				}
 			} else if minutes > 0 {
-				result = plural(int(minutes), "minute") + plural(int(seconds), "second")
+				if abbreviated {
+					result = fmt.Sprintf("%dm %ds", int(minutes), int(seconds))
+				} else {
+					result = plural(int(minutes), "minute") + plural(int(seconds), "second")
+				}
 			} else {
-				result = plural(int(seconds), "second")
+				if abbreviated {
+					result = fmt.Sprintf("%ds", int(seconds))
+				} else {
+					result = plural(int(seconds), "second")
+				}
 			}
 		} else {
 			// The duration is greater than zero, so process it.
