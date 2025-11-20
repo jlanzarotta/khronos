@@ -100,13 +100,13 @@ func runNuke(cmd *cobra.Command, _ []string) {
 	} else if priorYears {
 		var year int = carbon.Now().Year()
 		var prompt = fmt.Sprintf("Are you sure you want to nuke all entries prior to %d from the database?", year)
-		yesNo := yesNoPrompt(prompt)
+		yesNo := yesNoPrompt("%s", prompt)
 		if yesNo {
 			prompt = fmt.Sprintf("WARNING: Are you REALLY sure you want to nuke all entries prior to %d from the database?", year)
-			yesNo = yesNoPrompt(prompt)
+			yesNo = yesNoPrompt("%s", prompt)
 			if yesNo {
 				prompt = fmt.Sprintf("LAST WARNING: Are you REALLY REALLY sure you want to nuke all entries prior to %d from the database?", year)
-				yesNo = yesNoPrompt(prompt)
+				yesNo = yesNoPrompt("%s", prompt)
 				if yesNo {
 					db := database.New(viper.GetString(constants.DATABASE_FILE))
 					var count = db.NukePriorYearsEntries(dryRun, year, archive, compress)

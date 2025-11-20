@@ -93,7 +93,7 @@ func runStretch(cmd *cobra.Command, _ []string) {
 		secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false) + "?"
 
 	// Ask the user if they actually want to stretch the last entry or not.
-	yesNo := yesNoPrompt(prompt)
+	yesNo := yesNoPrompt("%s", prompt)
 	if yesNo {
 		// Yes was enter, so update the latest.
 		var e models.Entry
@@ -119,12 +119,13 @@ func yesNoPrompt(format string, args ...any) bool {
 		s, _ = r.ReadString('\n')
 		s = strings.TrimSpace(s)
 		s = strings.ToLower(s)
-		if s == "y" || s == "yes" {
-			return true
-		} else if s == "n" || s == "no" {
-			return false
-		} else {
-			return false
+		switch s {
+			case "y", "yes":
+				return true
+			case "n", "no":
+				return false
+			default:
+				return false
 		}
 	}
 }
