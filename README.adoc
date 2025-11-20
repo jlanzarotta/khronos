@@ -1,4 +1,6 @@
 image:https://img.shields.io/github/v/release/jlanzarotta/khronos[GitHub Release]
+image:https://img.shields.io/badge/License-BSD_3_Clause-blue.svg[License]
+image:https://github.com/jlanzarotta/khronos/actions/workflows/go.yml/badge.svg)](https://github.com/jlanzarotta/khronos/actions/workflows/go.yml)
 image:https://img.shields.io/github/downloads/jlanzarotta/khronos/total[GitHub Downloads (all assets, all releases)]
 image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/khronos[Go Version]
 
