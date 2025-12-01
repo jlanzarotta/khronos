@@ -100,24 +100,16 @@ func (e *Entry) GetPropertiesAsString() string {
 func (e *Entry) GetTasksAsString() string {
 	var result string
 
-	// Count the number of Tasks.
+	// Append any Tasks to the result string.
 	var taskCount = 0
 	for _, element := range e.Properties {
 		if strings.EqualFold(element.Name, constants.TASK) {
-			taskCount += 1
-		}
-	}
+			if taskCount > 0 {
+				result += ", "
+			}
 
-	// Append any Tasks to the string.
-	for _, element := range e.Properties {
-		if strings.EqualFold(element.Name, constants.TASK) {
 			result += element.Value
-		}
-
-		// Count backwards to add our separator.
-		if taskCount > 1 {
-			result += ", "
-			taskCount -= 1
+			taskCount += 1
 		}
 	}
 
