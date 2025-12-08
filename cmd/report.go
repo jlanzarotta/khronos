@@ -263,7 +263,7 @@ func reportByDay(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	setReportTableStyle(t)
+	SetReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
@@ -298,7 +298,7 @@ func reportByEntry(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	setReportTableStyle(t)
+	SetReportTableStyle(t)
 
 	var ticketFound bool = false
 	for _, entry := range entries {
@@ -404,7 +404,7 @@ func reportByProject(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	setReportTableStyle(t)
+	SetReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
 
@@ -459,7 +459,7 @@ func reportByTask(entries []models.Entry) {
 
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
-	setReportTableStyle(t)
+	SetReportTableStyle(t)
 
 	// If the ticket property was found on any entry, add the URL to the table header.
 	if !ticketFound {
@@ -524,7 +524,7 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 	}
 }
 
-func setReportTableStyle(t table.Writer) {
+func SetReportTableStyle(t table.Writer) {
 	t.SetStyle(table.Style{
 		Name: "ReportStyle",
 		Box: table.BoxStyle{

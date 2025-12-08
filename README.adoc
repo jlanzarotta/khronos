@@ -590,6 +590,23 @@ $ k show --statistics
 <2> The last entry in the database.
 <3> The total duration that is currently in the database.
 
+==== unpushed
+
+The `unpushed` option tells Khronos that you would like to show all entries that have not yet been pushed to the Jira server.
+
+[source, shell]
+----
+$ k show --unpushed
+
+ DATE       | PROJECT | TASK   | NOTE
+------------+---------+--------+--------------------------------------------------
+ 2025-11-17 | Khronos | coding | Working on bug fixes.
+ 2025-11-18 | Khronos | coding | Working on bug fixes.
+ 2025-11-19 | Khronos | coding | Working on bug fixes.
+ 2025-12-01 | Khronos | coding | Working on bug fixes.
+ 2025-12-02 | Khronos | coding | Working on bug fixes.
+----
+
 === report
 
 The `report` command tells Khronos you would like to run a report on your activities.  By default, you get the current days activities.

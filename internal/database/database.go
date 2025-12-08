@@ -423,6 +423,39 @@ func (db *Database) GetCountEntries() int64 {
 	return count
 }
 
+func (db *Database) GetUnpushedEntries() []models.Entry {
+	var s string = fmt.Sprintf("SELECT e.uid, e.project, e.note, e.entry_datetime FROM entry e JOIN property p on p.entry_uid = e.uid WHERE p.name = '%s' AND p.value = ''", constants.PUSHED)
+	results, err := db.Conn.Query(s)
+	if err != nil {
+		log.Fatalf("%s: Error trying to retrieve Entry records. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	records := []Entry{}
+	for results.Next() {
+		var entry Entry
+		err = results.Scan(&entry.Uid, &entry.Project, &entry.Note, &entry.EntryDatetime)
+		if err != nil {
+			log.Fatalf("%s: Error trying to Scan Entries results into data structure. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		records = append(records, entry)
+	}
+
+	var entries = []models.Entry{}
+	for _, e := range records {
+		var entry models.Entry = models.NewEntry(e.Uid, e.Project, e.Note.String, e.EntryDatetime)
+		var properties []Property = db.GetProperties(entry.Uid)
+		for _, p := range properties {
+			entry.AddEntryProperty(p.Name.String, p.Value.String)
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries
+}
+
 func CreateArchiveFile(entryWithProperty []EntryWithProperty, compress bool) {
 	// Create our unique archive file.
 	var filename = constants.APPLICATION_NAME_LOWERCASE + "_archive_" + carbon.Now(carbon.Local).ToShortDateTimeString()

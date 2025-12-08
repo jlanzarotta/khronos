@@ -165,6 +165,7 @@ const TICKET string = "ticket"
 const TICKET_NORMAL_CASE string = "Ticket"
 const TOTAL = "TOTAL"
 const UNKNOWN_UID int64 = -1
+const UNPUSHED = "unpushed"
 const URL = "url"
 const URL_NORMAL_CASE = "URL"
 const VERSION_LONG_DESCRIPTION = "Show the version information."

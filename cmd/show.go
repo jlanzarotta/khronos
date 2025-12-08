@@ -60,6 +60,7 @@ var showCmd = &cobra.Command{
 
 var favorites bool
 var statistics bool
+var unpushed bool
 
 type Configuration struct {
 	DatabaseFilename string     `yaml:"database_file"`
@@ -79,6 +80,7 @@ type Favorite struct {
 func init() {
 	showCmd.Flags().BoolVarP(&favorites, constants.FAVORITES, constants.EMPTY, false, "Show favorites")
 	showCmd.Flags().BoolVarP(&statistics, constants.STATISTICS, constants.EMPTY, false, "Show statistics")
+	showCmd.Flags().BoolVarP(&unpushed, constants.UNPUSHED, constants.EMPTY, false, "Show unpushed entries")
 	rootCmd.AddCommand(showCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -103,6 +105,10 @@ func runShow(cmd *cobra.Command, _ []string) {
 
 	if statistics {
 		showStatistics()
+	}
+
+	if unpushed {
+		showUnpushedEntries()
 	}
 }
 
@@ -208,5 +214,35 @@ func showStatistics() {
 	t.AppendRow(table.Row{"Last Entry", lastEntry.Dump(false, 0)})
 	t.AppendRow(table.Row{"Total Records", count})
 	t.AppendRow(table.Row{"Total Duration", secondsToHuman(diff, true)})
+	log.Println(t.Render())
+}
+
+func showUnpushedEntries() {
+	db := database.New(viper.GetString(constants.DATABASE_FILE))
+	var entries []models.Entry = db.GetUnpushedEntries()
+	if viper.GetBool(constants.DEBUG) {
+		log.Printf("\n*****\nDumping what GetUnpushedEntries() returned...\n*****\n")
+		for _, entry := range entries {
+			log.Printf("UID[%d], Project[%s], Note[%#v], EntryDatetime[%s], Properties[%#v]\n",
+				entry.Uid, entry.Project, entry.Note, entry.EntryDatetime, entry.GetPropertiesAsString())
+		}
+	}
+
+	// Create and configure the table.
+	var t table.Writer = table.NewWriter()
+	SetReportTableStyle(t)
+
+	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
+
+	for _, entry := range entries {
+		var entryDatetime carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
+		t.AppendRow(table.Row{
+			entryDatetime.Format(constants.CARBON_DATE_FORMAT),
+			entry.Project,
+			entry.GetTasksAsString(),
+			entry.Note})
+	}
+
+	// Render the table.
 	log.Println(t.Render())
 }
