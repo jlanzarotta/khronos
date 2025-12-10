@@ -235,14 +235,15 @@ If the configuration option `require_note:` is set to `true`, Khronos will promp
 [source, shell]
 ----
 Please enter the number of the favorite to add; otherwise, [Return] to quit. > 0
-A note is required.  Enter note or leave blank to quit. >
+Project[general] Task[training] requires a note...
+Enter note or leave blank to quit. >
 ----
 
 If the note is left blank/empty, nothing is added.
 
 [source, shell]
 ----
-Nothing added.
+Required note not entered. Nothing added.
 ----
 
 If no favorites are found in your configuration file, an error is displayed and the interactive add is cancelled.
@@ -298,12 +299,32 @@ If you want to finish working on a known favorite, you can use the `--favorite` 
 [source, shell]
 ----
 $ k add --favorite 0
-Adding Project[general] Task[training] Date[2023-12-07T14:10:02-05:00].
+You are about to add this entry...
+
+    Project[general]
+       Task[training]
+       Date[2023-12-07T14:10:02-05:00]
+
+Continue? Y/N (yes/no)? >
 ----
 
 The previous command tells Khronos that you just finished working on the favorite referenced by the number '0'.  If we look in our _.khronos.yaml_ file for the '0' favorite, we find that it references the 'project1+task1' combination.  With that, 'project1+task1' would be automatically logged as being completed.
 
 TIP: Configuring and using favorites, help improve consistency as well as improves speed of entering frequently used project/task combinations.
+
+If you choose `yes`...
+
+[source, shell]
+----
+Entry added.
+----
+
+If you choose `no`...
+
+[source, shell]
+----
+Nothing added.
+----
 
 ==== description
 

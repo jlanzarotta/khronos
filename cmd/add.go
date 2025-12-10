@@ -150,7 +150,6 @@ func runAdd(cmd *cobra.Command, args []string) {
 	var projectTask string = constants.EMPTY
 	var ticket string = constants.EMPTY
 	var requiredNote bool = false
-	var favoritesNotDisplayed bool = false
 
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
 
@@ -159,7 +158,6 @@ func runAdd(cmd *cobra.Command, args []string) {
 		projectTask = fav.Favorite
 		ticket = fav.Ticket
 		requiredNote = fav.RequireNote
-		favoritesNotDisplayed = true
 	} else {
 		if len(args) > 0 {
 			projectTask = args[0]
@@ -215,11 +213,11 @@ func runAdd(cmd *cobra.Command, args []string) {
 	if stringUtils.IsEmpty(note) {
 		var globalRequired bool = viper.GetBool(constants.REQUIRE_NOTE)
 		if globalRequired || requiredNote {
-			note = promptForNote(favoritesNotDisplayed, projectTask, true)
+			note = promptForNote(projectTask, true)
 
 			// If the note is still empty, this is an indicator that the user wants to exit.
 			if len(note) <= 0 {
-				log.Printf("%s\n", color.YellowString("Nothing added."))
+				log.Printf("%s\n", color.YellowString("Required note not entered. Nothing added."))
 				os.Exit(0)
 			}
 		}
@@ -240,31 +238,36 @@ func runAdd(cmd *cobra.Command, args []string) {
 		entry.AddEntryProperty(constants.PUSHED, constants.EMPTY)
 	}
 
-	log.Printf("%s%s.\n", color.GreenString(constants.ADDING), entry.Dump(true, constants.INDENT_AMOUNT))
-
-	// Write the new Entry to the database.
-	db.InsertNewEntry(entry)
+	// Prompt the user to make sure they really want to add this new entry.
+	log.Printf("You are about to add this entry...\n%s\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
+	yesNo := yesNoPrompt("Continue?")
+	if yesNo {
+		// Yes, they want the entry added. Write the new Entry to the database.
+		db.InsertNewEntry(entry)
+		log.Printf("%s.\n", color.GreenString("Entry added"))
+	} else {
+		// No, they do not want the entry added.
+		log.Printf("%s\n", color.YellowString("Nothing added."))
+	}
 }
 
-func promptForNote(favoritesNotDisplayed bool, projectTask string, required bool) string {
+func promptForNote(projectTask string, required bool) string {
 	r := bufio.NewReader(os.Stdin)
 	var s string
 	var prompt string
 
 	if required {
-		if favoritesNotDisplayed {
-			pieces := strings.Split(projectTask, "+")
-			prompt = color.YellowString("Project")
-			prompt += "["
-			prompt += pieces[0]
-			prompt += "] "
-			prompt += color.YellowString("Task")
-			prompt += "["
-			prompt += pieces[1]
-			prompt += "] requires a note...\n"
-		} else {
-			prompt = "A note is required...\n"
-		}
+		pieces := strings.Split(projectTask, "+")
+		prompt = color.YellowString("Project")
+		prompt += "["
+		prompt += pieces[0]
+		prompt += "] "
+		prompt += color.YellowString("Task")
+		prompt += "["
+		prompt += pieces[1]
+		prompt += "] requires a note...\n"
+	} else {
+		prompt = "A note is required...\n"
 	}
 
 	prompt += "Enter note or leave blank to quit. > "

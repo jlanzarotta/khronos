@@ -1,4 +1,5 @@
 @echo off
+del khronos.exe
 ::set CGO_ENABLED=1
 set CGO_ENABLED=0
 set GOOS=windows
