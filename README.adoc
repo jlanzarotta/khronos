@@ -431,10 +431,16 @@ The `break` command tells Khronos that you are going went on a break.  The time 
 
 [source, shell]
 ----
-$ k break lunch
+$ k break
+You are about to add this break...
+
+    Break Time
+       Date[2025-12-12T14:57:31-05:00]
+
+Continue? Y/N (yes/no) > yes
 ----
 
-The previous command tells Khronos that you just finished your lunch break.
+The previous command tells Khronos that you just finished your break.
 
 ==== note
 
@@ -442,8 +448,17 @@ The `note` option tells Khronos that you would like to add a note associated wit
 
 [source, shell]
 ----
-$ k break --note "Went to the doctor."
+$ k break --note lunch
+You are about to add this break...
+
+    Break Time
+       Note[lunch]
+       Date[2025-12-12T14:57:31-05:00]
+
+Continue? Y/N (yes/no) > y
 ----
+
+The previous command tells Khronos that you just finished your lunch break.
 
 === edit
 

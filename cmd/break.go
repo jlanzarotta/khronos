@@ -39,8 +39,8 @@ import (
 	"time"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
-	"github.com/fatih/color"
 	"github.com/dromara/carbon/v2"
+	"github.com/fatih/color"
 	"github.com/ijt/go-anytime"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,7 +50,7 @@ import (
 var breakCmd = &cobra.Command{
 	Use:   "break",
 	Short: constants.BREAK_SHORT_DESCRIPTION,
-	Long: constants.BREAK_LONG_DESCRIPTION,
+	Long:  constants.BREAK_LONG_DESCRIPTION,
 	Run: func(cmd *cobra.Command, args []string) {
 		runBreak(cmd, args)
 	},
@@ -95,9 +95,17 @@ func runBreak(cmd *cobra.Command, _ []string) {
 	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.BREAK, note,
 		breakTime.ToIso8601String(carbon.UTC))
 
-	log.Printf("%s %s.\n", color.GreenString(constants.ADDING), entry.Dump(false, 0))
+	// Prompt the user to make sure they still want to add the new break.
+	log.Printf("You are about to add this break...\n%s\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
+	yesNo := yesNoPrompt("Continue?")
+	if yesNo {
+		// Yes, they want the break added. Write the new Entry to the database.
+		db := database.New(viper.GetString(constants.DATABASE_FILE))
+		db.InsertNewEntry(entry)
+		log.Printf("%s.\n", color.GreenString("Break added"))
 
-	// Write the new Entry to the database.
-	db := database.New(viper.GetString(constants.DATABASE_FILE))
-	db.InsertNewEntry(entry)
+	} else {
+		// No, they do not want the break added.
+		log.Printf("%s\n", color.YellowString("Nothing added."))
+	}
 }

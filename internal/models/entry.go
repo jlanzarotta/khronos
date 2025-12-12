@@ -145,13 +145,14 @@ func (e *Entry) GetPushedAsString() string {
 func (e *Entry) Dump(vertical bool, indent_amount int) string {
 	var result string
 
+	// Add the break or project.
+	if vertical {
+		result = "\n"
+	}
+
 	if strings.EqualFold(e.Project, constants.BREAK) {
-		result = "Break Time"
+		result = result + strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString("Break Time")
 	} else {
-		// Add the project.
-		if vertical {
-			result = "\n"
-		}
 		result = result + strings.Repeat(constants.SPACE_CHARACTER, indent_amount) + color.YellowString("Project") + "[" + e.Project + "]"
 
 		// Add the task(s).
