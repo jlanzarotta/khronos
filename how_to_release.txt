@@ -16,3 +16,5 @@ local and remote tag and release again.  To delete the tag:
 
 1. git tag -d 1.0.9
 2. git push --delete origin 1.0.9
+
+goreleaser --clean --snapshot
