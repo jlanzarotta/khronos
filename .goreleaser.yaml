@@ -105,7 +105,7 @@ scoops:
   - name: khronos
     depends: ["git"]
     description: "Simple time tracker written in Go."
-    homepage: "https://github.com/jlanzarotta/scoops"
+    homepage: "https://github.com/jlanzarotta/khronos"
     license: BSD-3-Clause
     repository:
       owner: jlanzarotta
