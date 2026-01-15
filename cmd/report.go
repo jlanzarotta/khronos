@@ -71,6 +71,8 @@ var _cmd *cobra.Command
 var exportType = models.ExportTypeCSV
 var startEndTimeFormat string = constants.CARBON_START_END_TIME_FORMAT
 var pushCredentials models.Credentials
+var terminalWidth int
+var SUB int = 40
 
 // reportCmd represents the report command.
 var reportCmd = &cobra.Command{
@@ -83,13 +85,7 @@ var reportCmd = &cobra.Command{
 }
 
 func separator(input string) string {
-	width, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		log.Fatalf("%s: Error getting terminal dimensions. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
-		os.Exit(1)
-	}
-
-	var pad string = strings.Repeat("=", (((width - 2) - len(input)) / 2))
+	var pad string = strings.Repeat("=", (((terminalWidth - 2) - len(input)) / 2))
 	return (fmt.Sprintf("%s %s %s", pad, input, pad))
 }
 
@@ -326,24 +322,61 @@ func reportByEntry(entries []models.Entry) {
 			}
 		}
 
+		var endString string = end.Format(constants.CARBON_DATE_FORMAT)
+		var startString string = start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat)
+		var durationString string = secondsToHuman(util.Round(roundToMinutes, entry.Duration), true)
+		var projectString string = entry.Project
+		var taskString string = entry.GetTasksAsString()
+		var noteString string = entry.Note
+		var lineLength int = len(endString) + len(startString) + len(durationString) + len(projectString) + len(taskString)
+
 		if !ticketFound {
+			if lineLength+len(noteString) > terminalWidth-SUB {
+				noteString = truncateText(noteString, lineLength, terminalWidth-SUB)
+			}
+
 			t.AppendRow(table.Row{
-				end.Format(constants.CARBON_DATE_FORMAT),
-				start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-				secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
-				entry.Project,
-				entry.GetTasksAsString(),
-				entry.Note})
+				endString,
+				startString,
+				durationString,
+				projectString,
+				taskString,
+				noteString})
 		} else {
+			lineLength = lineLength + len(pushed)
+
+			if lineLength+len(noteString) > terminalWidth-SUB {
+				noteString = truncateText(noteString, lineLength, terminalWidth-SUB)
+			}
+
 			t.AppendRow(table.Row{
-				end.Format(constants.CARBON_DATE_FORMAT),
-				start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-				secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
-				entry.Project,
-				entry.GetTasksAsString(),
+				endString,
+				startString,
+				durationString,
+				projectString,
+				taskString,
 				pushed,
-				entry.Note})
+				noteString})
 		}
+
+		//if !ticketFound {
+		//	t.AppendRow(table.Row{
+		//		end.Format(constants.CARBON_DATE_FORMAT),
+		//		start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
+		//		secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
+		//		entry.Project,
+		//		entry.GetTasksAsString(),
+		//		entry.Note})
+		//} else {
+		//	t.AppendRow(table.Row{
+		//		end.Format(constants.CARBON_DATE_FORMAT),
+		//		start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
+		//		secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
+		//		entry.Project,
+		//		entry.GetTasksAsString(),
+		//		pushed,
+		//		entry.Note})
+		//}
 	}
 
 	// Render the table.
@@ -584,6 +617,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 	project, _ := cmd.Flags().GetString(constants.FLAG_PROJECT)
+	terminalWidth = getTerminalWidth()
 
 	// If we are supposed to push report items, validate that we first valid push configuration.
 	if push {
@@ -955,4 +989,23 @@ func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 	}
 
 	return stringUtils.Trim(result)
+}
+
+func getTerminalWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		// Default fallback if terminal size cannot be determined
+		return 80
+	}
+	return width
+}
+
+func truncateText(text string, lineLength int, maxWidth int) string {
+	if lineLength+len(text) <= maxWidth {
+		return text
+	}
+	if maxWidth <= 3 {
+		return text[:maxWidth]
+	}
+	return text[:maxWidth-lineLength-3] + "..."
 }
