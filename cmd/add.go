@@ -239,7 +239,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	// Prompt the user to make sure they really want to add this new entry.
-	log.Printf("You are about to add this entry...\n%s\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
+	log.Printf("You are about to add this entry\n%s...\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
 	yesNo := yesNoPrompt("Continue?")
 	if yesNo {
 		// Yes, they want the entry added. Write the new Entry to the database.

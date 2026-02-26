@@ -88,12 +88,13 @@ func runStretch(cmd *cobra.Command, _ []string) {
 	var entry models.Entry = db.GetLastEntry()
 
 	// Create the prompt.
-	var prompt string = "Would you like to stretch the last entry\n" + entry.Dump(true, constants.INDENT_AMOUNT)
-	prompt = prompt + "\n\nto " + stretchTime.ToIso8601String(carbon.Local) + " which is a difference of " +
-		secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false) + "?"
+	log.Printf("You are about to stretch the last entry\n%s\n\nto %s which is a difference of %s...\n\n",
+		entry.Dump(true, constants.INDENT_AMOUNT),
+		stretchTime.ToIso8601String(carbon.Local),
+		secondsToHumanFloat(stretchTime.DiffAbsInDuration(carbon.Parse(entry.EntryDatetime)).Seconds(), false))
 
 	// Ask the user if they actually want to stretch the last entry or not.
-	yesNo := yesNoPrompt("%s", prompt)
+	yesNo := yesNoPrompt("Continue?")
 	if yesNo {
 		// Yes was enter, so update the latest.
 		var e models.Entry
@@ -120,12 +121,12 @@ func yesNoPrompt(format string, args ...any) bool {
 		s = strings.TrimSpace(s)
 		s = strings.ToLower(s)
 		switch s {
-			case "y", "yes":
-				return true
-			case "n", "no":
-				return false
-			default:
-				return false
+		case "y", "yes":
+			return true
+		case "n", "no":
+			return false
+		default:
+			return false
 		}
 	}
 }

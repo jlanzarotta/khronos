@@ -96,7 +96,7 @@ func runBreak(cmd *cobra.Command, _ []string) {
 		breakTime.ToIso8601String(carbon.UTC))
 
 	// Prompt the user to make sure they still want to add the new break.
-	log.Printf("You are about to add this break...\n%s\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
+	log.Printf("You are about to add this break\n%s...\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
 	yesNo := yesNoPrompt("Continue?")
 	if yesNo {
 		// Yes, they want the break added. Write the new Entry to the database.

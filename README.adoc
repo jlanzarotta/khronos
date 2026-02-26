@@ -12,18 +12,18 @@ image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/khronos[Go Ver
 :numbered:
 :table-stripes: even
 
-Khronos is a simple command line tool use to track the time you spend on a
+Khronos is a simple command line tool used to track the time you spend on a
 specific project and the one or more tasks associated with that project.  It was
 inspired by the concepts of utt (Ultimate Time Tracker) and timetrap.
 
-== Version 3.0 and above
+== Version 3.0 and Above
 
 With the introduction of version 3, the entry date/time is now automatically
 recorded in UTC timezone, NOT the local timezone. This way, when an entry's
 date/time is displayed, it is automatically converted into the running machine's
 timezone.
 
-If you are using versions of Khronos before and wish to us version 3.0+, you
+If you are using versions of Khronos before and wish to use version 3.0+, you
 should use the `convert` command to convert all the entries in your database
 from local timezone to UTC. To do this, execute the following commands after
 updating to version 3.0:
@@ -49,7 +49,7 @@ These are the various methods in order to install Khronos on your system.
 
 === Scoop (Windows)
 
-You can install `khronos` using [scoop](https://scoop.sh/). It is in the `khronos` bucket:
+You can install `khronos` using https://scoop.sh/[scoop]. It is in the `khronos` bucket:
 
 [source, shell]
 ----
@@ -68,7 +68,7 @@ command, in my case, I used 'k'.  For Microsoft PowerShell, you can use
 > Set-Alias -Name k -Value khronos
 ----
 
-=== Other operating systems
+=== Other Operating Systems
 
 To install Khronos, simply unzip the archive for your specific operating system into the directory of your choice.
 
@@ -76,9 +76,9 @@ To install Khronos, simply unzip the archive for your specific operating system 
 
 When Khronos starts up, it checks to make sure there is a default configuration file.  If it does not exist, it is automatically created for you.
 
-NOTE: Khronos support the use of the _XDG Base Directory Specification_. For more information https://specifications.freedesktop.org/basedir-spec/latest/
+NOTE: Khronos supports the use of the _XDG Base Directory Specification_. For more information see https://specifications.freedesktop.org/basedir-spec/latest/
 
-Khronos uses the following precedence order when determining where the configuration file is located. Each item listed, takes precedence over the item below it:
+Khronos uses the following precedence order when determining where the configuration file is located. Each item listed takes precedence over the item below it:
 
 [cols="1,1a"]
 |===
@@ -123,26 +123,26 @@ favorites: <12>
 <2> If debug type information should be printed to the screen or not.  Default is `false`.
 <3> If day totals should be displayed on the reports or not. Default is `true`.
 <4> If time should be displayed in 24 hour format or not. Default is `false`.
-<5> If hours, minutes, and seconds should be abbreviates to h, m, and s, to save display area.
-<6> Indicated which report to run and which ones to not.
+<5> If hours, minutes, and seconds should be abbreviated to h, m, and s, to save display area.
+<6> Indicates which reports to run and which ones not to.
 <7> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
-<8> The number of minutes to round up or down to when running reports.  This makes is easy to report on a consistent time "buckets".
-<9> The day used to indicate the start of the week.  Some company's week start on Saturday, some on Sunday.  This allows to to change that start day to fit your needs.  The default is `Sunday`.
+<8> The number of minutes to round up or down to when running reports.  This makes it easy to report on consistent time "buckets".
+<9> The day used to indicate the start of the week.  Some companies' weeks start on Saturday, some on Sunday.  This allows you to change that start day to fit your needs.  The default is `Sunday`.
 <10> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
 <11> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
 <12> The list of favorites.
 
 == Date/Time
 
-If needs to be noted that date/time is stored in the database in ISO8601 UTC format https://en.wikipedia.org/wiki/ISO_8601. However, whenever at date/time is
-rendered on the screen, it is rended in local time. For example, `2025-04-07T19:35:31+00:00`, which is UTC, is rendered as `2025-04-07T15:35:31-04:00` Eastern Standard Time with Daylight
-Savings Time being observed since I set my timezone to EST. Your localtime will depend on your current timezone.
+It needs to be noted that date/time is stored in the database in ISO8601 UTC format https://en.wikipedia.org/wiki/ISO_8601. However, whenever a date/time is
+rendered on the screen, it is rendered in local time. For example, `2025-04-07T19:35:31+00:00`, which is UTC, is rendered as `2025-04-07T15:35:31-04:00` Eastern Standard Time with Daylight
+Savings Time being observed since I set my timezone to EST. Your local time will depend on your current timezone.
 
 == Natural Language Time
 
 Khronos supports natural language time constructs for a subset of
 commands.  Commands such as hello, add, break, and stretch have additional parameters
-that accept time an argument.  Any time you pass a time, Khronos will try
+that accept time as an argument.  Any time you pass a time, Khronos will try
 to parse it as a natural language time.
 
 This feature can be very handy if you start a project/task and forget to add it simply by specifying the `--at` subcommand.
@@ -173,14 +173,14 @@ with the time that was at specifically "12:30PM".
 
 [source, shell]
 ----
-$ k add project+task -- at "13:45"
+$ k add project+task --at "13:45"
 ----
 
 The previous example tells Khronos that you want it to add an entry
 with the time that was at specifically "13:45".
 
 For more information about Natural Language Time as well as samples, head over
-to [https://pkg.go.dev/github.com/ijt/go-anytime]
+to https://pkg.go.dev/github.com/ijt/go-anytime
 
 == Positional Commands
 
@@ -196,7 +196,7 @@ time.  This should be the first command you execute at the start of your day.
 $ k hello
 ----
 
-WARNING: Keep in mind that if you forget to execute the `hello` command at the start of the day, Khronos will think you worked throughout the night and calculate your time spent on your task accordingly when you run a `report`.  This may or may not be correct outcome.
+WARNING: Keep in mind that if you forget to execute the `hello` command at the start of the day, Khronos will think you worked throughout the night and calculate your time spent on your task accordingly when you run a `report`.  This may or may not be the correct outcome.
 
 === add
 
@@ -260,7 +260,7 @@ If during an add, the project+task is specified, this tells Khronos that you jus
 $ k add khronos+programming
 ----
 
-If during an add, you have multiple task you finished, you can specify then like below.  This tells Khronos that you just finished working on the project, `khronos` and the tasks, `programming` and `documentation`.
+If during an add, you have multiple tasks you finished, you can specify them like below.  This tells Khronos that you just finished working on the project, `khronos` and the tasks, `programming` and `documentation`.
 
 [source, shell]
 ----
@@ -299,18 +299,18 @@ If you want to finish working on a known favorite, you can use the `--favorite` 
 [source, shell]
 ----
 $ k add --favorite 0
-You are about to add this entry...
+You are about to add this entry
 
     Project[general]
        Task[training]
-       Date[2023-12-07T14:10:02-05:00]
+       Date[2023-12-07T14:10:02-05:00]...
 
 Continue? Y/N (yes/no)? >
 ----
 
 The previous command tells Khronos that you just finished working on the favorite referenced by the number '0'.  If we look in our _.khronos.yaml_ file for the '0' favorite, we find that it references the 'project1+task1' combination.  With that, 'project1+task1' would be automatically logged as being completed.
 
-TIP: Configuring and using favorites, help improve consistency as well as improves speed of entering frequently used project/task combinations.
+TIP: Configuring and using favorites helps improve consistency as well as improves speed of entering frequently used project/task combinations.
 
 If you choose `yes`...
 
@@ -349,9 +349,9 @@ favorites:
 
 ==== require_note
 
-An optional `required_note` can be added to a favorite. This flag tells Khronos that you want to require the prompting of a note for this specific favorite.
+An optional `require_note` can be added to a favorite. This flag tells Khronos that you want to require the prompting of a note for this specific favorite.
 
-IMPORTANT: If the global `require_note` option is set to `true`, no matter what value you set on a favorite's `required_note`, a note will be required.
+IMPORTANT: If the global `require_note` option is set to `true`, no matter what value you set on a favorite's `require_note`, a note will be required.
 
  # | PROJECT+TASK                | REQUIRE NOTE*
 ---+-----------------------------+---------------
@@ -365,11 +365,11 @@ IMPORTANT: If the global `require_note` option is set to `true`, no matter what 
 
 === amend
 
-The `amend` command tells Khronos that you are wanting to modify a recent entry's information.  By default, amend amends the most recent entry's information.  How if you would like to get a list of the entries for today, use the `--today` option.  More on the `--today` option below.
+The `amend` command tells Khronos that you are wanting to modify a recent entry's information.  By default, amend amends the most recent entry's information.  However, if you would like to get a list of the entries for today, use the `--today` option.  More on the `--today` option below.
 
 ==== today
 
-Using this option, you are shown a list of all the entries for today.  You are then given the opportunity to chose the entry you would like to amend.
+Using this option, you are shown a list of all the entries for today.  You are then given the opportunity to choose the entry you would like to amend.
 
 [source, shell]
 ----
@@ -427,15 +427,15 @@ Done.
 
 === break
 
-The `break` command tells Khronos that you are going went on a break.  The time associated with breaks are not added to your daily work time.  They are consider under the break classification when doing a `report'.
+The `break` command tells Khronos that you are going on a break.  The time associated with breaks is not added to your daily work time.  It is considered under the break classification when doing a `report`.
 
 [source, shell]
 ----
 $ k break
-You are about to add this break...
+You are about to add this break
 
     Break Time
-       Date[2025-12-12T14:57:31-05:00]
+       Date[2025-12-12T14:57:31-05:00]...
 
 Continue? Y/N (yes/no) > yes
 ----
@@ -475,13 +475,13 @@ Over time as you enter new entries into the database, the database will naturall
 
 ==== all
 
-The `all` option tells Khronos that you would like to nukes ALL entries from the database.  This includes the current years.
+The `all` option tells Khronos that you would like to nuke ALL entries from the database.  This includes the current year's entries.
 
-WARNING: Use this extreme caution as ALL entries will be nuked.  You are given ample warning before your entries are actually nuked.  YOU HAVE BEEN WARNED.
+WARNING: Use this with extreme caution as ALL entries will be nuked.  You are given ample warning before your entries are actually nuked.  YOU HAVE BEEN WARNED.
 
 [source, shell]
 ----
-$k nuke --all
+$ k nuke --all
 Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
@@ -496,7 +496,7 @@ NOTE: You are given ample warning before your entries are actually nuked...
 
 [source, shell]
 ----
-$k nuke --prior-years
+$ k nuke --prior-years
 Are you sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
 WARNING: Are you REALLY sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
 LAST WARNING: Are you REALLY REALLY sure you want to nuke all entries prior to 2024 from the database? (Y/N (yes/no)) yes
@@ -509,7 +509,7 @@ The `dry-run` option tells Khronos that you do not really want anything nuked.  
 
 [source, shell]
 ----
-$k nuke --all --dry-run
+$ k nuke --all --dry-run
 Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
@@ -522,13 +522,13 @@ The `archive` option tells Khronos that you would like to archive the entries th
 
 [source, shell]
 ----
-$k nuke --all --archive
+$ k nuke --all --archive
 Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 All 639 entries would have been nuked.
 
-$ls -l
+$ ls -l
 .a---  58 KB Tue 2025-02-18 08:25:48 PM . khronos_archive_20250218202548.csv
 ----
 
@@ -536,14 +536,15 @@ $ls -l
 
 The `compress` option tells Khronos that you would like to have the archive file automatically compressed. The compression format is _gzip_ and the compressed file will be named _khronos_archive_yyyymmddhhmmss.csv.gz_.
 
+[source, shell]
 ----
-$k nuke --all --archive --compress
+$ k nuke --all --archive --compress
 Are you sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 WARNING: Are you REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 LAST WARNING: Are you REALLY REALLY sure you want to nuke ALL the entries from your database? (Y/N (yes/no)) yes
 All 639 entries would have been nuked.
 
-$ls -l
+$ ls -l
 .a---  58 KB Tue 2025-02-18 08:25:48 PM . khronos_archive_20250218202548.csv.gz
 ----
 
@@ -645,7 +646,7 @@ $ k show --unpushed
 
 === report
 
-The `report` command tells Khronos you would like to run a report on your activities.  By default, you get the current days activities.
+The `report` command tells Khronos you would like to run a report on your activities.  By default, you get the current day's activities.
 
 A couple of things you will notice when you run a report is, first, the header.
 
@@ -654,7 +655,7 @@ A couple of things you will notice when you run a report is, first, the header.
 ============ 2025-01-19 00:00:00(3) to 2025-01-25 23:59:59(4) ============
 ----
 
-The report header tell you that start and end date/time of the report as well as the week number in parentheses.
+The report header tells you the start and end date/time of the report as well as the week number in parentheses.
 
 Secondly, you will see the _Total Time_.  The _Total Time_ can be in two formats, which is controlled by the `split_work_from_break_time` configuration option.
 
@@ -665,7 +666,7 @@ If `split_work_from_break_time` is set to `false`, you will get a combined _Tota
 Total Time: 3 hours 45 minutes 0 second
 ----
 
-If `split_work_from_break_time` is set to `false`, you will get a split _Total Time_...
+If `split_work_from_break_time` is set to `true`, you will get a split _Total Time_...
 
 [source, shell]
 ----
@@ -702,12 +703,12 @@ If _by_task: true_, a report by task section is created.
 
 [source, shell]
 ----
-=========  By Task  ==========
+==========  By Task  ==========
 ----
 
 ==== Options
 
-The `report` command had several handy options what allow you to customize what needs to be reported.
+The `report` command has several handy options that allow you to customize what needs to be reported.
 
 ===== --current-week
 
@@ -738,7 +739,7 @@ $ k report --last-entry
 
 ===== --from
 
-By specifying the option `--from` _date_, this tells Khronos you would the report to start from this specific date.
+By specifying the option `--from` _date_, this tells Khronos you would like the report to start from this specific date.
 
 [source, shell]
 ----
@@ -747,7 +748,7 @@ $ k report --from 2019-03-02
 
 ===== --to
 
-By specifying the option `--to` _date_, this tells Khronos you would the report to end at this specific date.
+By specifying the option `--to` _date_, this tells Khronos you would like the report to end at this specific date.
 
 [source, shell]
 ----
@@ -756,7 +757,7 @@ $ k report --to 2019-03-02
 
 ===== --today
 
-By specifying the option `--today`, this tells Khronos you would the report specifically for today.
+By specifying the option `--today`, this tells Khronos you would like the report specifically for today.
 
 [source, shell]
 ----
@@ -765,7 +766,7 @@ $ k report --today
 
 ===== --yesterday
 
-By specifying the option `--yesterday`, this tells Khronos you would the report specifically for yesterday.
+By specifying the option `--yesterday`, this tells Khronos you would like the report specifically for yesterday.
 
 [source, shell]
 ----
@@ -792,7 +793,7 @@ $ k report --project foobar
 
 ===== --no-rounding
 
-By specifying the option `--no-rounding`, this tells Khronos you would the all the duration to be their original, unrounded values.  This option is good it you have durations that are less than the value you have configured for rounding.
+By specifying the option `--no-rounding`, this tells Khronos you would like all the durations to be their original, unrounded values.  This option is good if you have durations that are less than the value you have configured for rounding.
 
 [source, shell]
 ----
@@ -802,7 +803,7 @@ $ k report --previous-week --no-rounding
 
 ==== --export type
 
-By specifying the option `--export`, this tells Khronos you would like export the report to one three types, CSV, HTML, and Mark Down.  The default is CSV.
+By specifying the option `--export`, this tells Khronos you would like to export the report to one of three types: CSV, HTML, and Markdown.  The default is CSV.
 
 [source, shell]
 ----
@@ -815,9 +816,9 @@ These commands will create a unique report file with the extension associated wi
 
 ==== push
 
-By specifying the `--push` option, you tell Khronos that you want to push any unpushed entry's, duration and note, to the associated Jira Ticket's worklog.
+By specifying the `--push` option, you tell Khronos that you want to push any unpushed entry's duration and note to the associated Jira Ticket's worklog.
 
-In order to be able to push entries to Jira, you first must several extra configuration elements to your _.khronos.yaml_ configuration file.
+In order to be able to push entries to Jira, you must first add several extra configuration elements to your _.khronos.yaml_ configuration file.
 
 First, you must add the Jira `push:` configuration. This configuration consists of a `type`, a `url`, a `username`, and an `api_key`.
 
@@ -845,22 +846,31 @@ favorites:
     require_note: true
     ticket: GENERAL-003 <1>
 ----
-<1> Tell Khronos that this entry is related to this Jira ticket.
+<1> Tells Khronos that this entry is related to this Jira ticket.
 
-By specifiying the `ticket`, attribute, Khronos will automatically add a `ticket` property to the entry when it is added to the database.
+By specifying the `ticket` attribute, Khronos will automatically add a `ticket` property to the entry when it is added to the database.
 
-Now that you have the necessary configuration setup, when you use the `--push`, Khronos will use a combination of the push URL along with the Ticket, you push the entry's duration and note to Jira Ticket's worklog. 
+Now that you have the necessary configuration set up, when you use `--push`, Khronos will use a combination of the push URL along with the ticket to push the entry's duration and note to the Jira Ticket's worklog.
 
 === stretch
 
-The `stretch` stretches the last entry to the current or specified date/time.
+The `stretch` command stretches the last entry to the current or specified date/time.
 
-In the below example, the latest entry to 05-Dec-2023...  Khronos will as you if you want to perform the stretch or not.  If you enter (y or Yes), the latest entry is stretched.  If you enter (n/No), the latest entry is not stretched.
+In the below example, the latest entry is displayed. Khronos will ask you if you want to perform the stretch or not.  If you enter (y or Yes), the latest entry is stretched.  If you enter (n/No), the latest entry is not stretched.
 
 [source, shell]
 ----
 $ k stretch
-Would you like to stretch Project[***hello] to Tuesday, 05-Dec-2023 13:48:32 EST? (Y/N (yes/no)) yes
+You are about to stretch the last entry
+
+    Project[general]
+       Task[meeting]
+       Note[Sprint Planning]
+       Date[2026-02-26T10:57:44-05:00]
+
+to 2026-02-26T11:19:42-05:00 which is a difference of 21 minutes 58 seconds...
+
+Continue? Y/N (yes/no) > yes
 Last entry was stretched.
 ----
 
@@ -886,9 +896,8 @@ modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-2. Redistributions in binary form must reproduce the above copyright notice,this list of conditions, and the following disclaimer in the documentation and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions, and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
