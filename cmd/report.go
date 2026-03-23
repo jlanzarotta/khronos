@@ -558,6 +558,7 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 }
 
 func SetReportTableStyle(t table.Writer) {
+	//t.SetStyle(table.StyleColoredBright)
 	t.SetStyle(table.Style{
 		Name: "ReportStyle",
 		Box: table.BoxStyle{
@@ -567,11 +568,11 @@ func SetReportTableStyle(t table.Writer) {
 			PaddingLeft:      " ",
 			PaddingRight:     " ",
 		},
-		Color: table.ColorOptions{
-			Row:          text.Colors{text.BgBlack, text.FgWhite},
-			RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
-			Separator:    text.Colors{text.BgBlack, text.FgHiWhite},
-		},
+		//Color: table.ColorOptions{
+		//	Row:          text.Colors{text.BgBlack, text.FgWhite},
+		//	RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
+		//	Separator:    text.Colors{text.BgBlack, text.FgHiWhite},
+		//},
 		Format: table.FormatOptions{
 			Header: text.FormatUpper,
 			Row:    text.FormatDefault,
@@ -586,13 +587,13 @@ func SetReportTableStyle(t table.Writer) {
 	})
 
 	// For the TOTAL line, make sure we highlight it correctly.
-	t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
-		switch row[2] {
-		case constants.TOTAL:
-			return text.Colors{text.BgBlack, text.FgHiWhite}
-		}
-		return nil
-	}))
+	//t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
+	//	switch row[2] {
+	//	case constants.TOTAL:
+	//		return text.Colors{text.BgBlack, text.FgHiWhite}
+	//	}
+	//	return nil
+	//}))
 }
 
 func runReport(cmd *cobra.Command, _ []string) {
