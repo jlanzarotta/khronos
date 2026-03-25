@@ -1008,5 +1008,18 @@ func truncateText(text string, lineLength int, maxWidth int) string {
 	if maxWidth <= 3 {
 		return text[:maxWidth]
 	}
-	return text[:maxWidth-lineLength-3] + "..."
+
+    var offset int = maxWidth-lineLength-3
+
+    if offset < 0 {
+        offset = 5
+    }
+
+    var result string = constants.EMPTY
+
+    if len(text) >= 5 {
+        result = text[:5]
+    }
+
+	return result + "..."
 }

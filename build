@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Remove old binary
+rm -f khronos.exe
+
+# Build settings
+export CGO_ENABLED=0
+export GOOS=windows
+export GOARCH=amd64
+export BUILD_VERSION="1.0.4"
+export BUILD_DATETIME=$(date +"%Y-%m-%dT%H:%M:%S")
+
+go build \
+  -ldflags="-s -w -X 'khronos/cmd.BuildDateTime=${BUILD_DATETIME}' -X 'khronos/cmd.BuildVersion=${BUILD_VERSION}'" \
+  -work -a -v \
+  -o khronos.exe \
+  main.go

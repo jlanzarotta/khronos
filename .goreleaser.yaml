@@ -79,6 +79,8 @@ changelog:
   filters:
     exclude:
       - '^Merge'
+      - "^test:"
+      - "^chore:"
   groups:
     - title: 'New Features'
       regexp: "^.*feat.*:+.*$"
