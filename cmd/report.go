@@ -56,6 +56,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/mattn/go-runewidth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -261,7 +262,8 @@ func reportByDay(entries []models.Entry) {
 	var t table.Writer = table.NewWriter()
 	SetReportTableStyle(t)
 
-	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE, constants.DURATION_NORMAL_CASE})
+	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE,
+        constants.DURATION_NORMAL_CASE})
 
 	// Add each row to the table.
 	for _, i := range sortedKeys {
@@ -305,8 +307,26 @@ func reportByEntry(entries []models.Entry) {
 	}
 
 	if !ticketFound {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Number:           6,
+				WidthMin:         10,
+				WidthMax:         60,
+				WidthMaxEnforcer: truncateWithEllipsis, // Unicode-safe column
+			},
+		})
+
 		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 	} else {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Number:           7,
+				WidthMin:         10,
+				WidthMax:         60,
+				WidthMaxEnforcer: truncateWithEllipsis, // Unicode-safe column
+			},
+		})
+
 		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.PUSHED_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 	}
 
@@ -328,13 +348,8 @@ func reportByEntry(entries []models.Entry) {
 		var projectString string = entry.Project
 		var taskString string = entry.GetTasksAsString()
 		var noteString string = entry.Note
-		var lineLength int = len(endString) + len(startString) + len(durationString) + len(projectString) + len(taskString)
 
 		if !ticketFound {
-			if lineLength+len(noteString) > terminalWidth-SUB {
-				noteString = truncateText(noteString, lineLength, terminalWidth-SUB)
-			}
-
 			t.AppendRow(table.Row{
 				endString,
 				startString,
@@ -343,12 +358,6 @@ func reportByEntry(entries []models.Entry) {
 				taskString,
 				noteString})
 		} else {
-			lineLength = lineLength + len(pushed)
-
-			if lineLength+len(noteString) > terminalWidth-SUB {
-				noteString = truncateText(noteString, lineLength, terminalWidth-SUB)
-			}
-
 			t.AppendRow(table.Row{
 				endString,
 				startString,
@@ -358,25 +367,6 @@ func reportByEntry(entries []models.Entry) {
 				pushed,
 				noteString})
 		}
-
-		//if !ticketFound {
-		//	t.AppendRow(table.Row{
-		//		end.Format(constants.CARBON_DATE_FORMAT),
-		//		start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-		//		secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
-		//		entry.Project,
-		//		entry.GetTasksAsString(),
-		//		entry.Note})
-		//} else {
-		//	t.AppendRow(table.Row{
-		//		end.Format(constants.CARBON_DATE_FORMAT),
-		//		start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
-		//		secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
-		//		entry.Project,
-		//		entry.GetTasksAsString(),
-		//		pushed,
-		//		entry.Note})
-		//}
 	}
 
 	// Render the table.
@@ -559,6 +549,7 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 
 func SetReportTableStyle(t table.Writer) {
 	//t.SetStyle(table.StyleColoredBright)
+	t.SetAllowedRowLength(getTerminalWidth())
 	t.SetStyle(table.Style{
 		Name: "ReportStyle",
 		Box: table.BoxStyle{
@@ -568,11 +559,6 @@ func SetReportTableStyle(t table.Writer) {
 			PaddingLeft:      " ",
 			PaddingRight:     " ",
 		},
-		//Color: table.ColorOptions{
-		//	Row:          text.Colors{text.BgBlack, text.FgWhite},
-		//	RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
-		//	Separator:    text.Colors{text.BgBlack, text.FgHiWhite},
-		//},
 		Format: table.FormatOptions{
 			Header: text.FormatUpper,
 			Row:    text.FormatDefault,
@@ -588,11 +574,11 @@ func SetReportTableStyle(t table.Writer) {
 
 	// For the TOTAL line, make sure we highlight it correctly.
 	//t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
-	//	switch row[2] {
-	//	case constants.TOTAL:
-	//		return text.Colors{text.BgBlack, text.FgHiWhite}
-	//	}
-	//	return nil
+	//  switch row[2] {
+	//  case constants.TOTAL:
+	//      return text.Colors{text.BgBlack, text.FgHiWhite}
+	//  }
+	//  return nil
 	//}))
 }
 
@@ -994,32 +980,56 @@ func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
 
 func getTerminalWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
+	if err != nil || width == 0 {
 		// Default fallback if terminal size cannot be determined
 		return 80
 	}
 	return width
 }
 
-func truncateText(text string, lineLength int, maxWidth int) string {
-	if lineLength+len(text) <= maxWidth {
-		return text
+//func truncateWithEllipsis(text string, lineLength int, maxWidth int) string {
+//  if lineLength+len(text) <= maxWidth {
+//      return text
+//  }
+//  if maxWidth <= 3 {
+//      return text[:maxWidth]
+//  }
+//
+//    var offset int = maxWidth-lineLength-3
+//
+//    if offset < 0 {
+//        offset = 5
+//    }
+//
+//    var result string = constants.EMPTY
+//
+//    if len(text) >= 5 {
+//        result = text[:5]
+//    }
+//
+//  return result + "..."
+//}
+
+func truncateWithEllipsis(col string, maxLen int) string {
+	if len(col) <= maxLen {
+		return col
 	}
-	if maxWidth <= 3 {
-		return text[:maxWidth]
+	return col[:maxLen-3] + "..."
+}
+
+func truncateUnicode(col string, maxLen int) string {
+	if runewidth.StringWidth(col) <= maxLen {
+		return col
 	}
-
-    var offset int = maxWidth-lineLength-3
-
-    if offset < 0 {
-        offset = 5
-    }
-
-    var result string = constants.EMPTY
-
-    if len(text) >= 5 {
-        result = text[:5]
-    }
-
-	return result + "..."
+	truncated := ""
+	width := 0
+	for _, r := range col {
+		rw := runewidth.RuneWidth(r)
+		if width+rw > maxLen-3 {
+			break
+		}
+		truncated += string(r)
+		width += rw
+	}
+	return truncated + "..."
 }
