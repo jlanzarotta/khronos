@@ -414,7 +414,7 @@ Enter Date Time (empty for no change) [2024-04-10T10:32:24-04:00] : 2024-04-10T1
 Commit these changes? (Y/N (yes/no))
 ----
 
-=== date
+==== date
 
 Using this option, you are shown a list of all the entries for specified date. The date *MUST* be in `YYYY-MM-DD` format.  You are then given the opportunity to choose the entry you would like to amend, just like when specifying `today`.
 
