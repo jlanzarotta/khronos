@@ -66,6 +66,7 @@ const CONVERTED = "converted"
 const CSV = "csv"
 const DATABASE_FILE string = "database_file"
 const DATE_FORMAT string = "2006-01-02" // WTF golang?  Why this date format?
+const DATE_FORMAT_YYYY_MM_DD string = "YYYY-MM-DD"
 const DATE_NORMAL_CASE = "Date"
 const DATE_TIME_NORMAL_CASE = "Date Time"
 const DEBUG = "debug"

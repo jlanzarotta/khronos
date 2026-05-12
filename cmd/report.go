@@ -159,10 +159,10 @@ func init() {
 	reportCmd.Flags().BoolP(constants.FLAG_TODAY, constants.EMPTY, false, "Report on today's entries.")
 	reportCmd.Flags().BoolP(constants.FLAG_PUSH, constants.EMPTY, false, "Push the reported entries that have not yet been pushed.")
 	reportCmd.Flags().StringVarP(&project, constants.FLAG_PROJECT, constants.EMPTY, constants.EMPTY, "Report on a specific project.")
-	reportCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "Report on the given day's entries in "+constants.DATE_FORMAT+" format.")
+	reportCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "Report on the given day's entries in "+constants.DATE_FORMAT_YYYY_MM_DD+" format.")
 	reportCmd.Flags().BoolP(constants.FLAG_LAST_ENTRY, constants.EMPTY, false, "Display the last entry's information.")
-	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT+" format.")
-	reportCmd.Flags().StringVarP(&to, constants.FLAG_TO, constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
+	reportCmd.Flags().StringVarP(&from, constants.FLAG_FROM, constants.EMPTY, constants.EMPTY, "Specify an inclusive start date to report in "+constants.DATE_FORMAT_YYYY_MM_DD+" format.")
+	reportCmd.Flags().StringVarP(&to, constants.FLAG_TO, constants.EMPTY, constants.EMPTY, "Specify an inclusive end date to report in "+constants.DATE_FORMAT_YYYY_MM_DD+" format.  If this is a day of the week, then it is the next occurrence from the start date of the report, including the start date itself.")
 	reportCmd.MarkFlagsRequiredTogether(constants.FLAG_FROM, constants.FLAG_TO)
 	reportCmd.Flags().BoolP(constants.EXPORT, constants.EMPTY, false, "Export to file.")
 	reportCmd.Flags().Var(&exportType, constants.EXPORT_TYPE, `Type of export file.  Allowed values: "csv", "html" or "md"`)
@@ -263,7 +263,7 @@ func reportByDay(entries []models.Entry) {
 	SetReportTableStyle(t)
 
 	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE,
-        constants.DURATION_NORMAL_CASE})
+		constants.DURATION_NORMAL_CASE})
 
 	// Add each row to the table.
 	for _, i := range sortedKeys {

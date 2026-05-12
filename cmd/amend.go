@@ -41,6 +41,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/agrison/go-commons-lang/stringUtils"
 	"github.com/dromara/carbon/v2"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -65,6 +66,8 @@ var amendCmd = &cobra.Command{
 
 func init() {
 	amendCmd.Flags().BoolP("today", constants.EMPTY, false, "List all the entries for today.")
+	amendCmd.Flags().StringVarP(&givenDate, constants.FLAG_DATE, constants.EMPTY, constants.EMPTY, "List all the entries for the given day in "+constants.DATE_FORMAT_YYYY_MM_DD+" format.")
+	amendCmd.MarkFlagsMutuallyExclusive("today", constants.FLAG_DATE)
 	rootCmd.AddCommand(amendCmd)
 }
 
@@ -72,15 +75,25 @@ func runAmend(cmd *cobra.Command, _ []string) {
 	var entry models.Entry
 
 	today, _ := cmd.Flags().GetBool("today")
+	givenDate, _ := cmd.Flags().GetString(constants.FLAG_DATE)
+
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
-	if today {
+	if today || !stringUtils.IsEmpty(givenDate) {
 		var input_value string = constants.EMPTY
 
 		for {
 			var t table.Writer = table.NewWriter()
 			t.SetAutoIndex(true)
 			t.AppendHeader(table.Row{"Project", "Task(s)", "Date/Time"})
-			var entries []models.Entry = db.GetEntriesForToday(*carbon.Now().StartOfDay(), *carbon.Now().EndOfDay())
+
+			var entries []models.Entry
+
+			if today {
+				entries = db.GetEntriesForToday(*carbon.Now().StartOfDay(), *carbon.Now().EndOfDay())
+			} else {
+				entries = db.GetEntriesForToday(*carbon.Parse(givenDate).StartOfDay(), *carbon.Parse(givenDate).EndOfDay())
+			}
+
 			for _, entry := range entries {
 				t.AppendRow(table.Row{entry.Project, entry.GetTasksAsString(), carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)})
 			}
