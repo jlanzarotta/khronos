@@ -50,6 +50,7 @@ import (
 
 var cfgFile string
 var note string
+var terminalWidth int
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -94,6 +95,8 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.PersistentFlags().Bool("help", false, constants.HELP_SHORT_DESCRIPTION)
+
+	terminalWidth = getTerminalWidth()
 }
 
 // initConfig reads in config file and ENV variables if set.

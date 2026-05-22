@@ -142,43 +142,43 @@ func showFavorites() {
 		}
 	}
 
-	t.SetStyle(table.Style{
-		Name: "ShowFavorites",
-		Box: table.BoxStyle{
-			MiddleHorizontal: "-",
-			MiddleSeparator:  "+",
-			MiddleVertical:   "|",
-			PaddingLeft:      " ",
-			PaddingRight:     " ",
-		},
-		Color: table.ColorOptions{
-			IndexColumn:  text.Colors{text.BgCyan, text.FgBlack},
-			Row:          text.Colors{text.BgBlack, text.FgWhite},
-			RowAlternate: text.Colors{text.BgBlack, text.FgHiWhite},
-		},
-		Format: table.FormatOptions{
-			Header: text.FormatUpper,
-			Row:    text.FormatDefault,
-		},
-		Options: table.Options{
-			DrawBorder:      false,
-			SeparateColumns: true,
-			SeparateFooter:  false,
-			SeparateHeader:  true,
-			SeparateRows:    false,
-		},
-	})
+	style := table.StyleDefault
+	style.Format.Header = text.FormatUpper
+	style.Size.WidthMin = terminalWidth
+	style.Size.WidthMax = terminalWidth
+	t.SetStyle(style)
+
+	var requiredNoteColumn int
 
 	if descriptionFound && ticketFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
+		requiredNoteColumn = 5
 	} else if descriptionFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.REQUIRE_NOTE_WITH_ASTERISK})
+		requiredNoteColumn = 4
 	} else if ticketFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
+		requiredNoteColumn = 4
 	} else {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.REQUIRE_NOTE_WITH_ASTERISK})
+		requiredNoteColumn = 3
 	}
 
+	// Set a couple of the columns to fixed values.
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Number:   1,
+			WidthMin: 10,
+			WidthMax: 10,
+		},
+		{
+			Number:   requiredNoteColumn,
+			WidthMin: 13,
+			WidthMax: 13,
+		},
+	})
+
+	// Add all the favorites to the table.
 	for i, f := range config.Favorites {
 		if descriptionFound && ticketFound {
 			t.AppendRow(table.Row{i, f.Favorite, f.Description, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})

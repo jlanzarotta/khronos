@@ -72,7 +72,6 @@ var _cmd *cobra.Command
 var exportType = models.ExportTypeCSV
 var startEndTimeFormat string = constants.CARBON_START_END_TIME_FORMAT
 var pushCredentials models.Credentials
-var terminalWidth int
 var SUB int = 40
 
 // reportCmd represents the report command.
@@ -86,8 +85,18 @@ var reportCmd = &cobra.Command{
 }
 
 func separator(input string) string {
-	var pad string = strings.Repeat("=", (((terminalWidth - 2) - len(input)) / 2))
-	return (fmt.Sprintf("%s %s %s", pad, input, pad))
+	// total '=' chars we need, accounting for the two spaces around input
+	total := terminalWidth - len(input) - 2
+	if total < 0 {
+		total = 0
+	}
+	left := total / 2
+	right := total - left // gets the leftover when total is odd
+
+	return fmt.Sprintf("%s %s %s",
+		strings.Repeat("=", left),
+		input,
+		strings.Repeat("=", right))
 }
 
 func dateRange(start *carbon.Carbon, end *carbon.Carbon) {
@@ -262,7 +271,22 @@ func reportByDay(entries []models.Entry) {
 	var t table.Writer = table.NewWriter()
 	SetReportTableStyle(t)
 
-	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE,
+	// Set a couple of the columns to fixed values and align the footer.
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Number:   1,
+			WidthMin: 10,
+			WidthMax: 10,
+		},
+		{
+			Number:   4,
+			WidthMin: 5,
+			WidthMax: 5,
+			Align:    text.AlignRight,
+		},
+	})
+
+	t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASKS_NORMAL_CASE, constants.EMPTY,
 		constants.DURATION_NORMAL_CASE})
 
 	// Add each row to the table.
@@ -271,13 +295,13 @@ func reportByDay(entries []models.Entry) {
 		var totalPerDay int64 = 0
 
 		for p, v := range day {
-			t.AppendRow(table.Row{i, p, v.GetTasksAsString(), secondsToHuman(v.Duration, true)})
+			t.AppendRow(table.Row{i, p, v.GetTasksAsString(), constants.EMPTY, secondsToHuman(v.Duration, true)})
 			totalPerDay += util.Round(roundToMinutes, v.Duration)
 		}
 
 		if display_by_day_totals {
 			t.AppendSeparator()
-			t.AppendRow(table.Row{constants.EMPTY, constants.EMPTY, constants.TOTAL, secondsToHuman(totalPerDay, true)})
+			t.AppendRow(table.Row{constants.EMPTY, constants.EMPTY, constants.EMPTY, constants.TOTAL, stringUtils.UpperCase(secondsToHuman(totalPerDay, true))})
 			t.AppendSeparator()
 		}
 	}
@@ -309,6 +333,21 @@ func reportByEntry(entries []models.Entry) {
 	if !ticketFound {
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
+				Number:   1,
+				WidthMin: 10,
+				WidthMax: 10,
+			},
+			{
+				Number:   2,
+				WidthMin: 18,
+				WidthMax: 18,
+			},
+			{
+				Number:   5,
+				WidthMin: 25,
+				WidthMax: 25,
+			},
+			{
 				Number:           6,
 				WidthMin:         10,
 				WidthMax:         60,
@@ -319,6 +358,21 @@ func reportByEntry(entries []models.Entry) {
 		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 	} else {
 		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Number:   1,
+				WidthMin: 10,
+				WidthMax: 10,
+			},
+			{
+				Number:   2,
+				WidthMin: 18,
+				WidthMax: 18,
+			},
+			{
+				Number:   6,
+				WidthMin: 25,
+				WidthMax: 25,
+			},
 			{
 				Number:           7,
 				WidthMin:         10,
@@ -548,38 +602,12 @@ func reportTotalWorkAndBreakTime(entries []models.Entry) {
 }
 
 func SetReportTableStyle(t table.Writer) {
-	//t.SetStyle(table.StyleColoredBright)
 	t.SetAllowedRowLength(getTerminalWidth())
-	t.SetStyle(table.Style{
-		Name: "ReportStyle",
-		Box: table.BoxStyle{
-			MiddleHorizontal: "-",
-			MiddleSeparator:  "+",
-			MiddleVertical:   "|",
-			PaddingLeft:      " ",
-			PaddingRight:     " ",
-		},
-		Format: table.FormatOptions{
-			Header: text.FormatUpper,
-			Row:    text.FormatDefault,
-		},
-		Options: table.Options{
-			DrawBorder:      false,
-			SeparateColumns: true,
-			SeparateFooter:  false,
-			SeparateHeader:  true,
-			SeparateRows:    false,
-		},
-	})
-
-	// For the TOTAL line, make sure we highlight it correctly.
-	//t.SetRowPainter(table.RowPainter(func(row table.Row) text.Colors {
-	//  switch row[2] {
-	//  case constants.TOTAL:
-	//      return text.Colors{text.BgBlack, text.FgHiWhite}
-	//  }
-	//  return nil
-	//}))
+	style := table.StyleDefault
+	style.Format.Header = text.FormatUpper
+	style.Size.WidthMin = terminalWidth
+	style.Size.WidthMax = terminalWidth
+	t.SetStyle(style)
 }
 
 func runReport(cmd *cobra.Command, _ []string) {
@@ -604,7 +632,6 @@ func runReport(cmd *cobra.Command, _ []string) {
 	fromDateStr, _ := cmd.Flags().GetString(constants.FLAG_FROM)
 	toDateStr, _ := cmd.Flags().GetString(constants.FLAG_TO)
 	project, _ := cmd.Flags().GetString(constants.FLAG_PROJECT)
-	terminalWidth = getTerminalWidth()
 
 	// If we are supposed to push report items, validate that we first valid push configuration.
 	if push {
