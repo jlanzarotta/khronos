@@ -162,6 +162,8 @@ func runAdd(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			projectTask = args[0]
 		} else {
+			// Create our scanner once.
+			scanner := bufio.NewScanner(os.Stdin)
 			for {
 				if getNumberOfFavorites() <= 0 {
 					log.Fatalf("%s: No favorites found in configuration file[%s].  Unable to perform an interactive add.\n",
@@ -173,14 +175,15 @@ func runAdd(cmd *cobra.Command, args []string) {
 				showFavorites()
 
 				// Prompt the user for the index number of the filename they would like to send.
-				r := bufio.NewReader(os.Stdin)
-
 				fmt.Fprintf(os.Stderr, "\nPlease enter the number of the favorite to add; otherwise, [Return] to quit. > ")
-				var s, _ = r.ReadString('\n')
-				s = strings.TrimSpace(s)
+				if !scanner.Scan() {
+					log.Printf("%s\n", color.YellowString("Nothing added."))
+					os.Exit(0)
+				}
 
-				// If the result is empty, the user wants to quit.
-				if len(s) <= 0 {
+				// Automatically strip the trailing newlines and see if the result is empty, the user wants to quit.
+				var s = scanner.Text()
+				if s == constants.EMPTY {
 					log.Printf("%s\n", color.YellowString("Nothing added."))
 					os.Exit(0)
 				}

@@ -205,17 +205,18 @@ func runAmend(cmd *cobra.Command, _ []string) {
 }
 
 func prompt(label string, value string) string {
-	r := bufio.NewReader(os.Stdin)
 	var s string
-
+	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Fprintf(os.Stderr, "Enter %s (empty for no change) ["+value+"] > ", label)
-	s, _ = r.ReadString('\n')
-	s = strings.TrimSpace(s)
+	if !scanner.Scan() {
+		s = scanner.Text()
 
-	// If the result is empty, use the original passed in value.
-	if len(s) <= 0 {
+		// If the result is empty, use the original passed in value.
+		if s == constants.EMPTY {
+			s = value
+		}
+	} else {
 		s = value
 	}
-
 	return s
 }

@@ -111,14 +111,16 @@ func runStretch(cmd *cobra.Command, _ []string) {
 }
 
 func yesNoPrompt(format string, args ...any) bool {
-	r := bufio.NewReader(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 	var s string
 
 	for {
 		fmt.Printf(format, args...)
 		fmt.Print(" Y/N (yes/no) > ")
-		s, _ = r.ReadString('\n')
-		s = strings.TrimSpace(s)
+		if !scanner.Scan() {
+			return false
+		}
+		s = scanner.Text()
 		s = strings.ToLower(s)
 		switch s {
 		case "y", "yes":
