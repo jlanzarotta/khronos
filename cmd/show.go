@@ -168,8 +168,8 @@ func showFavorites() {
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
 			Number:   1,
-			WidthMin: 10,
-			WidthMax: 10,
+			WidthMin: 3,
+			WidthMax: 3,
 		},
 		{
 			Number:   requiredNoteColumn,
