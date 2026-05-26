@@ -38,7 +38,6 @@ import (
 	"khronos/constants"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
@@ -79,53 +78,33 @@ func runAmend(cmd *cobra.Command, _ []string) {
 
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 	if today || !stringUtils.IsEmpty(givenDate) {
-		var input_value string = constants.EMPTY
+		var entries []models.Entry
 
-		for {
-			var t table.Writer = table.NewWriter()
-			t.SetAutoIndex(true)
-			t.AppendHeader(table.Row{"Project", "Task(s)", "Date/Time"})
-
-			var entries []models.Entry
-
-			if today {
-				entries = db.GetEntriesForToday(*carbon.Now().StartOfDay(), *carbon.Now().EndOfDay())
-			} else {
-				entries = db.GetEntriesForToday(*carbon.Parse(givenDate).StartOfDay(), *carbon.Parse(givenDate).EndOfDay())
-			}
-
-			for _, entry := range entries {
-				t.AppendRow(table.Row{entry.Project, entry.GetTasksAsString(), carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)})
-			}
-
-			log.Println(t.Render())
-
-			fmt.Print("Please enter index number of the entry you would like to amend; otherwise, ENTER to quit...\n")
-			n, _ := fmt.Scanln(&input_value)
-
-			// If nothing was entered, break out of the loop.
-			if n <= 0 {
-				log.Printf("%s\n", color.YellowString("No entry amended."))
-				return
-			}
-
-			// Validate what the user entered is actually a number.
-			i, err := strconv.Atoi(input_value)
-			if err != nil {
-				fmt.Printf("\nPlease enter a valid value.\n\n")
-				continue
-			}
-
-			// Validate that the entry was between 1 and the length of the entries.
-			if i <= 0 || i > len(entries) {
-				fmt.Printf("\nPlease enter a valid value.\n\n")
-				continue
-			}
-
-			// Get the entry the user wants to amend.
-			entry = entries[i-1]
-			break
+		if today {
+			entries = db.GetEntriesForToday(*carbon.Now().StartOfDay(), *carbon.Now().EndOfDay())
+		} else {
+			entries = db.GetEntriesForToday(*carbon.Parse(givenDate).StartOfDay(), *carbon.Parse(givenDate).EndOfDay())
 		}
+
+		if len(entries) == 0 {
+			log.Printf("%s\n", color.YellowString("No entries found."))
+			return
+		}
+
+		// Show the entries in an interactive selector and let the user pick one.
+		idx, ok, err := selectEntry("Select an entry to amend", entries)
+		if err != nil {
+			log.Fatalf("%s: Error running entry selector. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+			os.Exit(1)
+		}
+
+		if !ok {
+			// User cancelled - nothing to amend.
+			log.Printf("%s\n", color.YellowString("No entry amended."))
+			return
+		}
+
+		entry = entries[idx]
 	} else {
 		// Get the last Entry from the database.
 		entry = db.GetLastEntry()

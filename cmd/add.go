@@ -36,7 +36,6 @@ import (
 	"khronos/constants"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -67,7 +66,7 @@ var favorite int
 
 func getFavorite(index int) Favorite {
 	if index < 0 {
-		log.Fatalf("%s: Favorite must be >= 0.\n", color.RedString(constants.FATAL_NORMAL_CASE))
+		log.Fatalf("%s: Favorite must be >= 1.\n", color.RedString(constants.FATAL_NORMAL_CASE))
 		os.Exit(1)
 	}
 
@@ -86,29 +85,13 @@ func getFavorite(index int) Favorite {
 	}
 
 	if index >= len(config.Favorites) {
-		log.Fatalf("%s: Favorite[%d] not found in configuration file[%s].\n", color.RedString(constants.FATAL_NORMAL_CASE), index, viper.ConfigFileUsed())
+		// index is 0-based internally; report it 1-based to match what the user
+		// typed on the --favorite flag.
+		log.Fatalf("%s: Favorite[%d] not found in configuration file[%s].\n", color.RedString(constants.FATAL_NORMAL_CASE), index+1, viper.ConfigFileUsed())
 		os.Exit(1)
 	}
 
 	return config.Favorites[index]
-}
-
-func getNumberOfFavorites() int {
-	data, err := os.ReadFile(viper.ConfigFileUsed())
-	if err != nil {
-		log.Fatalf("%s: Error reading configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
-		os.Exit(1)
-	}
-
-	var config Configuration
-
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		log.Fatalf("%s: Error unmarshaling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
-		os.Exit(1)
-	}
-
-	return len(config.Favorites)
 }
 
 func init() {
@@ -154,7 +137,9 @@ func runAdd(cmd *cobra.Command, args []string) {
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
 
 	if favorite != -999 {
-		var fav Favorite = getFavorite(favorite)
+		// The --favorite flag is 1-based for the user (matching the displayed
+		// "#" column); getFavorite indexes 0-based, so convert here.
+		var fav Favorite = getFavorite(favorite - 1)
 		projectTask = fav.Favorite
 		ticket = fav.Ticket
 		requiredNote = fav.RequireNote
@@ -162,45 +147,34 @@ func runAdd(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			projectTask = args[0]
 		} else {
-			// Create our scanner once.
-			scanner := bufio.NewScanner(os.Stdin)
-			for {
-				if getNumberOfFavorites() <= 0 {
-					log.Fatalf("%s: No favorites found in configuration file[%s].  Unable to perform an interactive add.\n",
-						color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed())
-					os.Exit(1)
-				}
-
-				// Since no parameters were specified, do an interactive add.
-				showFavorites()
-
-				// Prompt the user for the index number of the filename they would like to send.
-				fmt.Fprintf(os.Stderr, "\nPlease enter the number of the favorite to add; otherwise, [Return] to quit. > ")
-				if !scanner.Scan() {
-					log.Printf("%s\n", color.YellowString("Nothing added."))
-					os.Exit(0)
-				}
-
-				// Automatically strip the trailing newlines and see if the result is empty, the user wants to quit.
-				var s = scanner.Text()
-				if s == constants.EMPTY {
-					log.Printf("%s\n", color.YellowString("Nothing added."))
-					os.Exit(0)
-				}
-
-				// Convert the string to an integer, thus validating the user entered a number.
-				i, err := strconv.Atoi(s)
-				if err != nil {
-					log.Printf("%s.\n\n", color.RedString("Invalid number entered"))
-					continue
-				}
-
-				var fav Favorite = getFavorite(i)
-				projectTask = fav.Favorite
-				ticket = fav.Ticket
-				requiredNote = fav.RequireNote
-				break
+			// Since no parameters were specified, do an interactive add using
+			// the bubbles/table selector. The selector displays the favorites
+			// and returns the chosen index directly, replacing the old
+			// show-then-prompt-for-a-number loop.
+			favs := loadFavorites()
+			if len(favs) <= 0 {
+				log.Fatalf("%s: No favorites found in configuration file[%s].  Unable to perform an interactive add.\n",
+					color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed())
+				os.Exit(1)
 			}
+
+			idx, ok, err := selectFavorite("Select a favorite to add", viper.ConfigFileUsed(), favs)
+			if err != nil {
+				log.Fatalf("%s: Error running favorites selector. %s\n",
+					color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+				os.Exit(1)
+			}
+
+			// User cancelled (q/esc/ctrl+c or no selection): nothing to add.
+			if !ok {
+				log.Printf("%s\n", color.YellowString("Nothing added."))
+				os.Exit(0)
+			}
+
+			var fav Favorite = getFavorite(idx)
+			projectTask = fav.Favorite
+			ticket = fav.Ticket
+			requiredNote = fav.RequireNote
 		}
 	}
 

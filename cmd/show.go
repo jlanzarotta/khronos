@@ -112,7 +112,10 @@ func runShow(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func showFavorites() {
+// loadFavorites reads and unmarshals the configuration file, returning the
+// parsed favorites. Pulled out of showFavorites so both the interactive and
+// non-interactive paths share one source of truth.
+func loadFavorites() []Favorite {
 	data, err := os.ReadFile(viper.ConfigFileUsed())
 	if err != nil {
 		log.Fatalf("%s: Error reading configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
@@ -120,19 +123,38 @@ func showFavorites() {
 	}
 
 	var config Configuration
-	var t table.Writer = table.NewWriter()
-
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatalf("%s: Error unmarshaling configuration file[%s]. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), viper.ConfigFileUsed(), err.Error())
 		os.Exit(1)
 	}
 
+	return config.Favorites
+}
+
+// showFavorites either launches an interactive selector (when attached to a
+// terminal) or falls back to the original go-pretty dump (when piped/redirected).
+func showFavorites() {
+	favs := loadFavorites()
+
+	if len(favs) == 0 {
+		log.Printf("No favorites found in configuration file[%s].\n", viper.ConfigFileUsed())
+		return
+	}
+
+	showFavoritesTable(favs)
+}
+
+// showFavoritesTable is the original non-interactive rendering, preserved as the
+// fallback for non-terminal output.
+func showFavoritesTable(favs []Favorite) {
+	var t table.Writer = table.NewWriter()
+
 	log.Printf("Favorites found in configuration file[%s]:\n\n", viper.ConfigFileUsed())
 
 	var ticketFound bool = false
 	var descriptionFound bool = false
-	for _, f := range config.Favorites {
+	for _, f := range favs {
 		if len(f.Ticket) > 0 {
 			ticketFound = true
 		}
@@ -178,16 +200,18 @@ func showFavorites() {
 		},
 	})
 
-	// Add all the favorites to the table.
-	for i, f := range config.Favorites {
+	// Add all the favorites to the table. The "#" column is 1-based to match
+	// the interactive selector and the --favorite flag.
+	for i, f := range favs {
+		num := i + 1
 		if descriptionFound && ticketFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.Description, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
+			t.AppendRow(table.Row{num, f.Favorite, f.Description, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
 		} else if descriptionFound {
-			t.AppendRow(table.Row{i, f.Favorite, f.Description, f.RequireNote})
+			t.AppendRow(table.Row{num, f.Favorite, f.Description, f.RequireNote})
 		} else if ticketFound {
-			t.AppendRow(table.Row{i, f.Favorite, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
+			t.AppendRow(table.Row{num, f.Favorite, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
 		} else {
-			t.AppendRow(table.Row{i, f.Favorite, f.RequireNote})
+			t.AppendRow(table.Row{num, f.Favorite, f.RequireNote})
 		}
 	}
 
