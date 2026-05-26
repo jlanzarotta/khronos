@@ -280,7 +280,7 @@ $ k add khronos+programming --note "I love programming."
 
 The `--favorite` option tells Khronos that you would like to use one of your preconfigured favorite project/task combinations.  These favorites are stored in the _.khronos.yaml_ file which is located in the installation directory.  By default, there are 5 preconfigured favorites; however, you can add as many as you would like.
 
-NOTE: Favorites are zero (0) based.
+NOTE: Favorites are 1 based.
 
 Favorites are in the following format:
 
@@ -298,7 +298,7 @@ If you want to finish working on a known favorite, you can use the `--favorite` 
 
 [source, shell]
 ----
-$ k add --favorite 0
+$ k add --favorite 1
 You are about to add this entry
 
     Project[general]
