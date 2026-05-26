@@ -1,5 +1,5 @@
 /*
-Copyright © 2018-2025 Jeff Lanzarotta
+Copyright © 2018-2026 Jeff Lanzarotta
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ var JiraLogWorkToTicketUrl string
 var JiraBrowseTicketUrl string
 
 //  {
-//    "started": "2025-11-04T09:30:00.000-0500",
+//    "started": "2026-11-04T09:30:00.000-0500",
 //    "timeSpentSeconds": 3600,
 //    "comment": {
 //      "type": "doc",
@@ -106,7 +106,7 @@ type JiraRequest struct {
 const JIRATimeLayout = "2006-01-02T15:04:05.000-0700"
 
 // UTCToJira takes a timestamp string that is guaranteed to be in UTC
-// (e.g. "2025-11-04T16:00:28+00:00") and returns it formatted for Jira.
+// (e.g. "2026-11-04T16:00:28+00:00") and returns it formatted for Jira.
 // If the input cannot be parsed, an error is returned.
 func UTCToJira(utcStr string) (string, error) {
 	// Parse the incoming string as RFC3339 (covers the "+00:00" suffix).
