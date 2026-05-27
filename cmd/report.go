@@ -910,8 +910,9 @@ func pushEntries(db *database.Database, entries []models.Entry) {
 					if result.StatusCode == 201 {
 						db.UpdateEntryPushed(httpRequest.EntryUid)
 					} else {
-						return fmt.Errorf("for Entry[uid[%d]] Jira Server responded: %v\n{%q}",
-							httpRequest.EntryUid, result.Status, body)
+						var entry models.Entry = db.GetEntry(httpRequest.EntryUid)
+						return fmt.Errorf("for Entry[%s] Jira Server responded: %v\n{%q}",
+							entry.Dump(false, 0), result.Status, body)
 					}
 				}
 

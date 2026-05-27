@@ -318,7 +318,7 @@ func (db *Database) GetEntriesForToday(start carbon.Carbon, end carbon.Carbon) [
 	return entries
 }
 
-func (db *Database) getEntry(uid int64) models.Entry {
+func (db *Database) GetEntry(uid int64) models.Entry {
 	var s string = fmt.Sprintf("SELECT e.uid, e.project, e.note, e.entry_datetime FROM entry e WHERE e.uid = %d ORDER BY entry_datetime;", uid)
 	results, err := db.Conn.QueryContext(db.Context, s)
 	if err != nil {
@@ -376,7 +376,7 @@ func (db *Database) GetFirstEntry() models.Entry {
 	result.Close()
 
 	// Create entry from the data from the database.
-	var entry models.Entry = db.getEntry(firstUid)
+	var entry models.Entry = db.GetEntry(firstUid)
 
 	return entry
 }
@@ -398,7 +398,7 @@ func (db *Database) GetLastEntry() models.Entry {
 	result.Close()
 
 	// Create entry from the data from the database.
-	var entry models.Entry = db.getEntry(lastUid)
+	var entry models.Entry = db.GetEntry(lastUid)
 
 	return entry
 }
