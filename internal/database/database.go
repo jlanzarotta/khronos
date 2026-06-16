@@ -358,6 +358,35 @@ func (db *Database) GetEntry(uid int64) models.Entry {
 	return entry
 }
 
+func (db *Database) AllowedToAdd() bool {
+	var now carbon.Carbon = *carbon.Now()
+	var start carbon.Carbon = *now.StartOfDay()
+	var end carbon.Carbon = *now.EndOfDay()
+	var s string = fmt.Sprintf("SELECT COUNT(*) FROM entry e WHERE e.project = '%s' AND e.entry_datetime BETWEEN '%s' AND '%s';", constants.HELLO, start.ToIso8601String(), end.ToIso8601String())
+	
+	result, err := db.Conn.QueryContext(db.Context, s)
+	if err != nil {
+		log.Fatalf("%s: Error trying to retrieve count of HELLO entries. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	var count int64
+	result.Next()
+	err = result.Scan(&count)
+	if err != nil {
+		log.Fatalf("%s: Error trying to Scan count. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	result.Close()
+
+	if (count <= 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
 func (db *Database) GetFirstEntry() models.Entry {
 	result, err := db.Conn.QueryContext(db.Context, "SELECT e.uid FROM entry e ORDER BY entry_datetime LIMIT 1;")
 	if err != nil {

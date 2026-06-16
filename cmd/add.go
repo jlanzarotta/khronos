@@ -118,6 +118,13 @@ func runAdd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	// Check if we are allowed to add. Each day we must first do a HELLO to start our day.
+	var allowed bool = db.AllowedToAdd()
+	if allowed == false {
+		log.Fatalf("%s: Unable to add entries. A `hello` must be done first thing each day.\n", color.RedString(constants.FATAL_NORMAL_CASE))
+		os.Exit(1)
+	}
+
 	// Check it the --at flag was enter or not.
 	if !stringUtils.IsEmpty(atTimeStr) {
 		atTime, err := anytime.Parse(atTimeStr, time.Now())
