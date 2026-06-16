@@ -1,0 +1,7 @@
+cd C:\code\my-go-project
+go-dev              # start the container with that project mounted
+go-dev -Keep        # same but container persists after exit
+go-dev -Attach      # re-enter a kept container
+go-dev -Ports       # expose the configured port
+go-dev -Clean       # remove the container
+go-dev -Clean -RemoveImage  # remove container + image
