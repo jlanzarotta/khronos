@@ -343,14 +343,22 @@ func reportByEntry(entries []models.Entry) {
 				WidthMax: 18,
 			},
 			{
+				Number:   3,
+				WidthMin: 43,
+				WidthMax: 43,
+			},
+			{
+				Number:   4,
+				WidthMin: 24,
+				WidthMax: 24,
+			},
+			{
 				Number:   5,
-				WidthMin: 25,
-				WidthMax: 25,
+				WidthMin: 41,
+				WidthMax: 41,
 			},
 			{
 				Number:           6,
-				WidthMin:         10,
-				WidthMax:         60,
 				WidthMaxEnforcer: truncateWithEllipsis, // Unicode-safe column
 			},
 		})
@@ -367,6 +375,21 @@ func reportByEntry(entries []models.Entry) {
 				Number:   2,
 				WidthMin: 18,
 				WidthMax: 18,
+			},
+			{
+				Number:   3,
+				WidthMin: 43,
+				WidthMax: 43,
+			},
+			{
+				Number:   4,
+				WidthMin: 24,
+				WidthMax: 24,
+			},
+			{
+				Number:   5,
+				WidthMin: 41,
+				WidthMax: 41,
 			},
 			{
 				Number:   6,

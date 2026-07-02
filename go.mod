@@ -11,7 +11,7 @@ require (
 	github.com/mattn/go-isatty v0.0.22
 	github.com/mattn/go-runewidth v0.0.24
 	golang.org/x/term v0.44.0
-	modernc.org/sqlite v1.52.0
+	modernc.org/sqlite v1.53.0
 )
 
 require (
@@ -40,7 +40,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	modernc.org/libc v1.73.4 // indirect
+	modernc.org/libc v1.73.5 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
@@ -51,8 +51,8 @@ require (
 	github.com/ijt/goparsify v0.0.0-20221203142333-3a5276334b8d // indirect
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jedib0t/go-pretty/v6 v6.8.1
-	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
+	github.com/jedib0t/go-pretty/v6 v6.8.2
+	github.com/pelletier/go-toml/v2 v2.4.2 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
