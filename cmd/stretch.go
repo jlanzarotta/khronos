@@ -31,7 +31,6 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"khronos/constants"
 	"log"
@@ -111,24 +110,16 @@ func runStretch(cmd *cobra.Command, _ []string) {
 }
 
 func yesNoPrompt(format string, args ...any) bool {
-	scanner := bufio.NewScanner(os.Stdin)
-	var s string
+	fmt.Printf(format, args...)
+	fmt.Print(" Y/N (yes/no) > ")
 
-	for {
-		fmt.Printf(format, args...)
-		fmt.Print(" Y/N (yes/no) > ")
-		if !scanner.Scan() {
-			return false
-		}
-		s = scanner.Text()
-		s = strings.ToLower(s)
-		switch s {
-		case "y", "yes":
-			return true
-		case "n", "no":
-			return false
-		default:
-			return false
-		}
+	s, _ := readLine(stdinReader)
+	s = strings.ToLower(strings.TrimSpace(s))
+
+	switch s {
+	case "y", "yes":
+		return true
+	default:
+		return false
 	}
 }

@@ -10,7 +10,7 @@ require (
 	github.com/ijt/go-anytime v1.9.2
 	github.com/mattn/go-isatty v0.0.22
 	github.com/mattn/go-runewidth v0.0.24
-	golang.org/x/term v0.44.0
+	golang.org/x/term v0.45.0
 	modernc.org/sqlite v1.53.0
 )
 
@@ -38,9 +38,9 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	modernc.org/libc v1.74.0 // indirect
+	modernc.org/libc v1.74.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
@@ -62,6 +62,6 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/subosito/gotenv v1.6.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )

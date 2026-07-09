@@ -138,6 +138,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	var projectTask string = constants.EMPTY
+	var description string = constants.EMPTY
 	var ticket string = constants.EMPTY
 	var requiredNote bool = false
 
@@ -148,6 +149,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 		// "#" column); getFavorite indexes 0-based, so convert here.
 		var fav Favorite = getFavorite(favorite - 1)
 		projectTask = fav.Favorite
+        description = fav.Description
 		ticket = fav.Ticket
 		requiredNote = fav.RequireNote
 	} else {
@@ -180,6 +182,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 			var fav Favorite = getFavorite(idx)
 			projectTask = fav.Favorite
+            description = fav.Description
 			ticket = fav.Ticket
 			requiredNote = fav.RequireNote
 		}
@@ -197,7 +200,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	if stringUtils.IsEmpty(note) {
 		var globalRequired bool = viper.GetBool(constants.REQUIRE_NOTE)
 		if globalRequired || requiredNote {
-			note = promptForNote(projectTask, true)
+			note = promptForNote(projectTask, description, true)
 
 			// If the note is still empty, this is an indicator that the user wants to exit.
 			if len(note) <= 0 {
@@ -235,8 +238,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 }
 
-func promptForNote(projectTask string, required bool) string {
-	r := bufio.NewReader(os.Stdin)
+func promptForNote(projectTask string, description string, required bool) string {
 	var s string
 	var prompt string
 
@@ -249,6 +251,14 @@ func promptForNote(projectTask string, required bool) string {
 		prompt += color.YellowString("Task")
 		prompt += "["
 		prompt += pieces[1]
+
+        if !stringUtils.IsEmpty(description) {
+		    prompt += "] "
+		    prompt += color.YellowString("Description")
+		    prompt += "["
+		    prompt += description
+        }
+
 		prompt += "] requires a note...\n"
 	} else {
 		prompt = "A note is required...\n"
@@ -257,8 +267,42 @@ func promptForNote(projectTask string, required bool) string {
 	prompt += "Enter note or leave blank to quit. > "
 
 	fmt.Print(prompt)
-	s, _ = r.ReadString('\n')
+	s, _ = readLine(stdinReader)
 	s = strings.TrimSpace(s)
 
 	return s
+}
+
+// readLine reads a single line of input from r, terminated by '\n', '\r',
+// or '\r\n'. Unlike bufio.Reader.ReadString('\n'), this tolerates a bare
+// '\r' - which is what a raw-mode terminal (e.g. one left in that state by
+// a Bubble Tea program that hasn't fully restored cooked mode yet) sends
+// for the Enter key instead of '\n'. Without this, ReadString('\n') can
+// block forever waiting for a byte that never arrives.
+func readLine(r *bufio.Reader) (string, error) {
+	var sb strings.Builder
+
+	for {
+		b, err := r.ReadByte()
+		if err != nil {
+			// Return whatever we've accumulated so far (e.g. EOF mid-line).
+			return sb.String(), err
+		}
+
+		if b == '\n' {
+			return sb.String(), nil
+		}
+
+		if b == '\r' {
+			// Peek ahead in case this is a "\r\n" pair; if so, consume the
+			// '\n' too so it doesn't leak into the next read.
+			next, err := r.Peek(1)
+			if err == nil && len(next) == 1 && next[0] == '\n' {
+				_, _ = r.ReadByte()
+			}
+			return sb.String(), nil
+		}
+
+		sb.WriteByte(b)
+	}
 }

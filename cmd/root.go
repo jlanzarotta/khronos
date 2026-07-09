@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	"bufio"
 	"errors"
 	"khronos/constants"
 	"khronos/internal/database"
@@ -51,6 +52,7 @@ import (
 var cfgFile string
 var note string
 var terminalWidth int
+var stdinReader = bufio.NewReader(os.Stdin)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
