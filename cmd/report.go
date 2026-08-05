@@ -383,12 +383,12 @@ func reportByEntry(entries []models.Entry) {
 			},
 			{
 				Number:   4,
-				WidthMin: 24,
+				WidthMin: 10,
 				WidthMax: 24,
 			},
 			{
 				Number:   5,
-				WidthMin: 41,
+				WidthMin: 10,
 				WidthMax: 41,
 			},
 			{
