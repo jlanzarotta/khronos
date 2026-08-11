@@ -225,7 +225,8 @@ func reportByDay(entries []models.Entry) {
 	var consolidatedByDay map[string]map[string]models.Entry = make(map[string]map[string]models.Entry)
 	for _, entry := range entries {
 		var task = entry.GetTasksAsString()
-		consolidatedDay, found := consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)]
+		var dayKey string = carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local).Format(constants.CARBON_DATE_FORMAT)
+		consolidatedDay, found := consolidatedByDay[dayKey]
 		if found {
 			consolidatedProject, found := consolidatedDay[entry.Project]
 			if found {
@@ -237,14 +238,14 @@ func reportByDay(entries []models.Entry) {
 				consolidatedProject.Duration += util.Round(roundToMinutes, entry.Duration)
 
 				// Replace the consolidated entry.
-				consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][entry.Project] = consolidatedProject
+				consolidatedByDay[dayKey][entry.Project] = consolidatedProject
 			} else {
 				var newEntry models.Entry = models.NewEntry(entry.Uid, entry.Project, entry.Note, entry.EntryDatetime)
 				newEntry.Duration = util.Round(roundToMinutes, entry.Duration)
 				newEntry.Properties = entry.Properties
 
 				// Add the new entry.
-				consolidatedByDay[carbon.Parse(entry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)][entry.Project] = newEntry
+				consolidatedByDay[dayKey][entry.Project] = newEntry
 			}
 		} else {
 			// Since the EntryDatetime was not found, add it.
@@ -253,9 +254,8 @@ func reportByDay(entries []models.Entry) {
 			newEntry.Properties = entry.Properties
 
 			// Add the new entry.
-			var key string = carbon.Parse(newEntry.EntryDatetime).Format(constants.CARBON_DATE_FORMAT)
-			consolidatedByDay[key] = make(map[string]models.Entry)
-			consolidatedByDay[key][newEntry.Project] = newEntry
+			consolidatedByDay[dayKey] = make(map[string]models.Entry)
+			consolidatedByDay[dayKey][newEntry.Project] = newEntry
 		}
 	}
 
@@ -754,7 +754,7 @@ func runReport(cmd *cobra.Command, _ []string) {
 		// Check to see if the 1st element we have is a HELLO.  If not, we need to adjust
 		// accordingly.
 		if index == 0 || strings.EqualFold(entries[index].Project, constants.HELLO) {
-			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime)
+			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime).SetTimezone(carbon.Local)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
@@ -767,13 +767,13 @@ func runReport(cmd *cobra.Command, _ []string) {
 			entry.Duration = current.DiffAbsInSeconds(&midnight)
 			newEntries = append(newEntries, entry)
 		} else {
-			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime)
+			var current carbon.Carbon = *carbon.Parse(entries[index].EntryDatetime).SetTimezone(carbon.Local)
 			if current.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), current.Error)
 				os.Exit(1)
 			}
 
-			var prior carbon.Carbon = *carbon.Parse(entries[index-1].EntryDatetime)
+			var prior carbon.Carbon = *carbon.Parse(entries[index-1].EntryDatetime).SetTimezone(carbon.Local)
 			if prior.Error != nil {
 				log.Fatalf("%s: Unable to parse EntryDateTime. %s\n", color.RedString(constants.FATAL_NORMAL_CASE), prior.Error)
 				os.Exit(1)
