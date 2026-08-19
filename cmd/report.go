@@ -331,136 +331,197 @@ func reportByDay(entries []models.Entry) {
 	export("report by day", t)
 }
 
+// Column sizing for the by entry report.  Each column is measured against the
+// content it actually holds, and only when the total will not fit in the
+// terminal are the variable width columns shrunk to make room.
+const (
+	columnOverhead int = 3 // The " | " drawn between two columns.
+
+	minimumProjectColumnWidth int = 8
+	minimumTaskColumnWidth    int = 10
+	minimumNoteColumnWidth    int = 12
+)
+
+// entryRow holds one rendered row of the by entry report.  The rows are built
+// before the table is configured so that the column widths can be measured
+// from the real content rather than guessed at with fixed values.
+type entryRow struct {
+	date     string
+	startEnd string
+	duration string
+	project  string
+	task     string
+	pushed   string
+	note     string
+}
+
+// widen returns the larger of the current width and the display width of the
+// given value.
+func widen(current int, value string) int {
+	if width := runewidth.StringWidth(value); width > current {
+		return width
+	}
+
+	return current
+}
+
+// fitColumns scales the variable width columns so that together they occupy
+// exactly available characters, growing them when the terminal has room to
+// spare and shrinking them when it does not.  Each column keeps at least its
+// minimum and the rest of the space is handed out in proportion to how much
+// each column actually wants, so the note column, which is the one that runs
+// long, ends up with the lion's share.
+func fitColumns(available int, widths []int, minimums []int) {
+	var total int = 0
+	var minimum int = 0
+
+	// No column may drop below its minimum, so start from there.
+	for i := range widths {
+		if widths[i] < minimums[i] {
+			widths[i] = minimums[i]
+		}
+
+		total += widths[i]
+		minimum += minimums[i]
+	}
+
+	// There is not even room for the minimums, so this is as small as the
+	// report can get.  The terminal is simply too narrow.
+	if available <= minimum {
+		copy(widths, minimums)
+		return
+	}
+
+	var slack int = available - minimum
+	var wanted int = total - minimum
+
+	// Every column is already sitting at its minimum, so there is nothing to
+	// scale in proportion to.  Give the slack to the last column.
+	if wanted <= 0 {
+		copy(widths, minimums)
+		widths[len(widths)-1] += slack
+
+		return
+	}
+
+	var used int = 0
+	for i := range widths {
+		widths[i] = minimums[i] + ((widths[i] - minimums[i]) * slack / wanted)
+		used += widths[i]
+	}
+
+	// Integer division leaves a few characters unassigned, so give them to the
+	// last column, which is the one most likely to want them.
+	widths[len(widths)-1] += available - used
+}
+
 func reportByEntry(entries []models.Entry) {
 	log.Printf("\n")
 	log.Printf("%s\n", separator(" By Entry "))
 	log.Printf("\n")
 
+	// Build the rows up front and measure each column against its content and
+	// its header.
+	var rows []entryRow = make([]entryRow, 0, len(entries))
+	var ticketFound bool = false
+
+	var dateWidth int = widen(0, constants.DATE_NORMAL_CASE)
+	var startEndWidth int = widen(0, constants.START_END_NORMAL_CASE)
+	var durationWidth int = widen(0, constants.DURATION_NORMAL_CASE)
+	var pushedWidth int = widen(0, constants.PUSHED_NORMAL_CASE)
+	var projectWidth int = widen(0, constants.PROJECT_NORMAL_CASE)
+	var taskWidth int = widen(0, constants.TASK_NORMAL_CASE)
+	var noteWidth int = widen(0, constants.NOTE_NORMAL_CASE)
+
+	for _, entry := range entries {
+		if !stringUtils.IsEmpty(entry.GetTicketAsString()) {
+			ticketFound = true
+		}
+
+		var end carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
+		var start carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local).SubSeconds(int(entry.Duration))
+
+		// Entries without a ticket cannot be pushed at all, so their pushed
+		// column stays empty.  The rest report a simple yes or no.  The
+		// timestamp of the push itself is available from the show command and
+		// is far too wide to earn a place in this table.
+		var pushed string = constants.EMPTY
+		if !stringUtils.IsBlank(entry.GetTicketAsString()) {
+			pushed = constants.NO_NORMAL_CASE
+			if !stringUtils.IsBlank(entry.GetPushedAsString()) {
+				pushed = constants.YES_NORMAL_CASE
+			}
+		}
+
+		var row entryRow = entryRow{
+			date:     end.Format(constants.CARBON_DATE_FORMAT),
+			startEnd: start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat),
+			duration: secondsToHuman(util.Round(roundToMinutes, entry.Duration), true),
+			project:  entry.Project,
+			task:     entry.GetTasksAsString(),
+			pushed:   pushed,
+			note:     entry.Note,
+		}
+
+		dateWidth = widen(dateWidth, row.date)
+		startEndWidth = widen(startEndWidth, row.startEnd)
+		durationWidth = widen(durationWidth, row.duration)
+		pushedWidth = widen(pushedWidth, row.pushed)
+		projectWidth = widen(projectWidth, row.project)
+		taskWidth = widen(taskWidth, row.task)
+		noteWidth = widen(noteWidth, row.note)
+
+		rows = append(rows, row)
+	}
+
+	// The date, start/end, duration and pushed columns hold values of a known
+	// size, so they are given exactly what they need.  Whatever the terminal
+	// has left over is shared between the three variable width columns.
+	var columns int = 6
+	var fixed int = dateWidth + startEndWidth + durationWidth
+	if ticketFound {
+		columns = 7
+		fixed += pushedWidth
+	}
+
+	var available int = terminalWidth - fixed - (columns*columnOverhead + 1)
+	var variable []int = []int{projectWidth, taskWidth, noteWidth}
+
+	fitColumns(available, variable, []int{minimumProjectColumnWidth, minimumTaskColumnWidth, minimumNoteColumnWidth})
+	projectWidth, taskWidth, noteWidth = variable[0], variable[1], variable[2]
+
 	// Create and configure the table.
 	var t table.Writer = table.NewWriter()
 	SetReportTableStyle(t)
 
-	var ticketFound bool = false
-	for _, entry := range entries {
-		if !stringUtils.IsEmpty(entry.GetTicketAsString()) {
-			ticketFound = true
-			break
-		}
+	var columnConfigs []table.ColumnConfig = []table.ColumnConfig{
+		{Number: 1, WidthMin: dateWidth, WidthMax: dateWidth},
+		{Number: 2, WidthMin: startEndWidth, WidthMax: startEndWidth},
+		{Number: 3, WidthMin: durationWidth, WidthMax: durationWidth},
+		{Number: 4, WidthMin: projectWidth, WidthMax: projectWidth, WidthMaxEnforcer: truncateUnicode},
+		{Number: 5, WidthMin: taskWidth, WidthMax: taskWidth, WidthMaxEnforcer: truncateUnicode},
 	}
 
-	if !ticketFound {
-		t.SetColumnConfigs([]table.ColumnConfig{
-			{
-				Number:   1,
-				WidthMin: 10,
-				WidthMax: 10,
-			},
-			{
-				Number:   2,
-				WidthMin: 18,
-				WidthMax: 18,
-			},
-			{
-				Number:   3,
-				WidthMin: 43,
-				WidthMax: 43,
-			},
-			{
-				Number:   4,
-				WidthMin: 10,
-				WidthMax: 24,
-			},
-			{
-				Number:   5,
-				WidthMin: 10,
-				WidthMax: 41,
-			},
-			{
-				Number:           6,
-				WidthMaxEnforcer: truncateWithEllipsis, // Unicode-safe column
-			},
-		})
-
-		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
-	} else {
-		t.SetColumnConfigs([]table.ColumnConfig{
-			{
-				Number:   1,
-				WidthMin: 10,
-				WidthMax: 10,
-			},
-			{
-				Number:   2,
-				WidthMin: 18,
-				WidthMax: 18,
-			},
-			{
-				Number:   3,
-				WidthMin: 43,
-				WidthMax: 43,
-			},
-			{
-				Number:   4,
-				WidthMin: 10,
-				WidthMax: 24,
-			},
-			{
-				Number:   5,
-				WidthMin: 10,
-				WidthMax: 41,
-			},
-			{
-				Number:   6,
-				WidthMin: 10,
-				WidthMax: 25,
-			},
-			{
-				Number:           7,
-				WidthMin:         10,
-				WidthMax:         60,
-				WidthMaxEnforcer: truncateWithEllipsis, // Unicode-safe column
-			},
-		})
+	if ticketFound {
+		columnConfigs = append(columnConfigs,
+			table.ColumnConfig{Number: 6, WidthMin: pushedWidth, WidthMax: pushedWidth},
+			table.ColumnConfig{Number: 7, WidthMin: noteWidth, WidthMax: noteWidth, WidthMaxEnforcer: truncateUnicode})
 
 		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.PUSHED_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
+	} else {
+		columnConfigs = append(columnConfigs,
+			table.ColumnConfig{Number: 6, WidthMin: noteWidth, WidthMax: noteWidth, WidthMaxEnforcer: truncateUnicode})
+
+		t.AppendHeader(table.Row{constants.DATE_NORMAL_CASE, constants.START_END_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.PROJECT_NORMAL_CASE, constants.TASK_NORMAL_CASE, constants.NOTE_NORMAL_CASE})
 	}
 
-	for _, entry := range entries {
-		var end carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local)
-		var start carbon.Carbon = *carbon.Parse(entry.EntryDatetime).SetTimezone(carbon.Local).SubSeconds(int(entry.Duration))
+	t.SetColumnConfigs(columnConfigs)
 
-		var pushed string = constants.EMPTY
-		if !stringUtils.IsBlank(entry.GetTicketAsString()) {
-			pushed = entry.GetPushedAsString()
-			if stringUtils.IsBlank(pushed) {
-				pushed = "No"
-			}
-		}
-
-		var endString string = end.Format(constants.CARBON_DATE_FORMAT)
-		var startString string = start.Format(startEndTimeFormat) + " to " + end.Format(startEndTimeFormat)
-		var durationString string = secondsToHuman(util.Round(roundToMinutes, entry.Duration), true)
-		var projectString string = entry.Project
-		var taskString string = entry.GetTasksAsString()
-		var noteString string = entry.Note
-
-		if !ticketFound {
-			t.AppendRow(table.Row{
-				endString,
-				startString,
-				durationString,
-				projectString,
-				taskString,
-				noteString})
+	for _, row := range rows {
+		if ticketFound {
+			t.AppendRow(table.Row{row.date, row.startEnd, row.duration, row.project, row.task, row.pushed, row.note})
 		} else {
-			t.AppendRow(table.Row{
-				endString,
-				startString,
-				durationString,
-				projectString,
-				taskString,
-				pushed,
-				noteString})
+			t.AppendRow(table.Row{row.date, row.startEnd, row.duration, row.project, row.task, row.note})
 		}
 	}
 
@@ -1102,16 +1163,21 @@ func getTerminalWidth() int {
 //  return result + "..."
 //}
 
-func truncateWithEllipsis(col string, maxLen int) string {
-	if len(col) <= maxLen {
-		return col
-	}
-	return col[:maxLen-3] + "..."
-}
-
+// truncateUnicode cuts col down to maxLen display columns, appending an
+// ellipsis when anything was removed.  Widths are measured in display columns
+// rather than bytes so that multi byte runes are never split in half.
 func truncateUnicode(col string, maxLen int) string {
+	if maxLen <= 0 {
+		return constants.EMPTY
+	}
+
 	if runewidth.StringWidth(col) <= maxLen {
 		return col
+	}
+
+	// There is no room for both an ellipsis and any content.
+	if maxLen <= 3 {
+		return strings.Repeat(".", maxLen)
 	}
 	truncated := ""
 	width := 0
