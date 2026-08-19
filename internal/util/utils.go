@@ -31,17 +31,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package util
 
-func Round(roundToMinutes int64, durationInSeconds int64) (result int64) {
-	var seconds int64 = durationInSeconds
-
-	if roundToMinutes > 0 {
-		var remainder int64 = seconds % (roundToMinutes * 60)
-		seconds -= remainder
-		if remainder/6000 >= 8 {
-			// Round up since we are over the threshold of precision.
-			seconds = seconds + roundToMinutes*60
-		}
+func Round(roundToMinutes int64, durationInSeconds int64) int64 {
+	if roundToMinutes <= 0 {
+		return durationInSeconds
 	}
 
-	return (seconds)
+	period := roundToMinutes * 60
+	remainder := durationInSeconds % period
+	seconds := durationInSeconds - remainder
+
+	// Round up once we are at least halfway into the period.
+	if remainder*2 >= period {
+		seconds += period
+	}
+
+	return seconds
 }

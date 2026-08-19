@@ -41,7 +41,6 @@ import (
 	"khronos/internal/rest"
 	"khronos/internal/util"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"sort"
@@ -205,8 +204,15 @@ func parseWeekday(v string) (time.Weekday, error) {
 	return -1, fmt.Errorf("invalid weekday '%s'", v)
 }
 
+// plural formats count followed by singular, pluralizing the noun for any
+// count other than one. A zero count returns an empty string so that
+// zero-valued components drop out of a composed duration entirely.
 func plural(count int, singular string) (result string) {
-	if (count == 1) || (count == 0) {
+	if count == 0 {
+		return ""
+	}
+
+	if (count == 1) || (count == -1) {
 		result = strconv.Itoa(count) + " " + singular + " "
 	} else {
 		result = strconv.Itoa(count) + " " + singular + "s "
@@ -294,9 +300,21 @@ func reportByDay(entries []models.Entry) {
 		var day map[string]models.Entry = consolidatedByDay[i]
 		var totalPerDay int64 = 0
 
-		for p, v := range day {
+		// The projects within a day live in a map too, so they need the same
+		// sorted key treatment.  Otherwise the rows within a day come out in a
+		// random order that changes from run to run.
+		var sortedProjects []string = make([]string, 0, len(day))
+		for project := range day {
+			sortedProjects = append(sortedProjects, project)
+		}
+		sort.SliceStable(sortedProjects, func(x, y int) bool { return sortedProjects[x] < sortedProjects[y] })
+
+		for _, p := range sortedProjects {
+			var v models.Entry = day[p]
 			t.AppendRow(table.Row{i, p, v.GetTasksAsString(), constants.EMPTY, secondsToHuman(v.Duration, true)})
-			totalPerDay += util.Round(roundToMinutes, v.Duration)
+
+			// v.Duration was already rounded during consolidation above.
+			totalPerDay += v.Duration
 		}
 
 		if display_by_day_totals {
@@ -568,8 +586,17 @@ func reportByTask(entries []models.Entry) {
 		t.AppendHeader(table.Row{constants.TASKS_NORMAL_CASE, constants.PROJECTS_NORMAL_CASE, constants.DURATION_NORMAL_CASE, constants.URL_NORMAL_CASE})
 	}
 
+	// Since maps are not sorted in go, sort the keys so that the rows are
+	// rendered in a stable order instead of a random one.
+	var sortedKeys []string = make([]string, 0, len(consolidateByTask))
+	for key := range consolidateByTask {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.SliceStable(sortedKeys, func(x, y int) bool { return sortedKeys[x] < sortedKeys[y] })
+
 	// Populate the table.
-	for _, v := range consolidateByTask {
+	for _, key := range sortedKeys {
+		var v models.Task = consolidateByTask[key]
 		if !ticketFound {
 			t.AppendRow(table.Row{v.Task, v.GetProjectsAsString(), secondsToHuman(v.Duration, true)})
 		} else {
@@ -960,73 +987,87 @@ func secondsToHumanFloat(inSeconds float64, hmsOnly bool) (result string) {
 	return secondsToHuman(int64(inSeconds), hmsOnly)
 }
 
+// Duration components, largest to smallest, used to render a human readable
+// duration. A month is 30 days and a year is 365 days.
+const (
+	secondsPerMinute int64 = 60
+	secondsPerHour   int64 = 60 * secondsPerMinute
+	secondsPerDay    int64 = 24 * secondsPerHour
+	secondsPerWeek   int64 = 7 * secondsPerDay
+	secondsPerMonth  int64 = 30 * secondsPerDay
+	secondsPerYear   int64 = 365 * secondsPerDay
+)
+
+type durationUnit struct {
+	seconds      int64
+	name         string
+	abbreviation string
+}
+
+var hmsUnits = []durationUnit{
+	{secondsPerHour, "hour", "h"},
+	{secondsPerMinute, "minute", "m"},
+	{1, "second", "s"},
+}
+
+var fullUnits = []durationUnit{
+	{secondsPerYear, "year", "y"},
+	{secondsPerMonth, "month", "mo"},
+	{secondsPerWeek, "week", "w"},
+	{secondsPerDay, "day", "d"},
+	{secondsPerHour, "hour", "h"},
+	{secondsPerMinute, "minute", "m"},
+	{1, "second", "s"},
+}
+
 func secondsToHuman(inSeconds int64, hmsOnly bool) (result string) {
-	// If the duration is zero, this means than the rounded value is less than
-	// the "round to minutes" value, simply show a less than message.
 	var abbreviated bool = viper.GetBool(constants.DISPLAY_HMS_ABBREVIATED)
 
+	// If the duration is zero, this means that the rounded value is less than
+	// the "round to minutes" value, simply show a less than message.
 	if inSeconds == 0 {
-		result = "< " + plural(int(roundToMinutes), "minute")
-	} else {
-		if hmsOnly {
-			hours := inSeconds / 3600
-			inSeconds = inSeconds % 3600
-			minutes := inSeconds / 60
-			seconds := inSeconds % 60
-
-			if hours > 0 {
-				if abbreviated {
-					result = fmt.Sprintf("%dh %dm %ds", int(hours), int(minutes), int(seconds))
-				} else {
-					result = plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-				}
-			} else if minutes > 0 {
-				if abbreviated {
-					result = fmt.Sprintf("%dm %ds", int(minutes), int(seconds))
-				} else {
-					result = plural(int(minutes), "minute") + plural(int(seconds), "second")
-				}
-			} else {
-				if abbreviated {
-					result = fmt.Sprintf("%ds", int(seconds))
-				} else {
-					result = plural(int(seconds), "second")
-				}
+		if roundToMinutes > 0 {
+			if abbreviated {
+				return fmt.Sprintf("< %dm", roundToMinutes)
 			}
+
+			return stringUtils.Trim("< " + plural(int(roundToMinutes), "minute"))
+		}
+
+		if abbreviated {
+			return "0s"
+		}
+
+		return "0 seconds"
+	}
+
+	var units []durationUnit = fullUnits
+	if hmsOnly {
+		units = hmsUnits
+	}
+
+	// Walk the units largest to smallest, emitting only the non-zero ones so
+	// that a value like 15 minutes renders as "15 minutes" and not as
+	// "15 minutes 0 second".
+	var builder strings.Builder
+	var remaining int64 = inSeconds
+
+	for _, unit := range units {
+		var value int64 = remaining / unit.seconds
+		remaining = remaining % unit.seconds
+
+		if value == 0 {
+			continue
+		}
+
+		if abbreviated {
+			builder.WriteString(fmt.Sprintf("%d%s ", value, unit.abbreviation))
 		} else {
-			// The duration is greater than zero, so process it.
-			years := math.Floor(float64(inSeconds) / 60 / 60 / 24 / 7 / 30 / 12)
-			seconds := inSeconds % (60 * 60 * 24 * 7 * 30 * 12)
-			months := math.Floor(float64(seconds) / 60 / 60 / 24 / 7 / 30)
-			seconds = inSeconds % (60 * 60 * 24 * 7 * 30)
-			weeks := math.Floor(float64(seconds) / 60 / 60 / 24 / 7)
-			seconds = inSeconds % (60 * 60 * 24 * 7)
-			days := math.Floor(float64(seconds) / 60 / 60 / 24)
-			seconds = inSeconds % (60 * 60 * 24)
-			hours := math.Floor(float64(seconds) / 60 / 60)
-			seconds = inSeconds % (60 * 60)
-			minutes := math.Floor(float64(seconds) / 60)
-			seconds = inSeconds % 60
-
-			if years > 0 {
-				result = plural(int(years), "year") + plural(int(months), "month") + plural(int(weeks), "week") + plural(int(days), "day") + plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else if months > 0 {
-				result = plural(int(months), "month") + plural(int(weeks), "week") + plural(int(days), "day") + plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else if weeks > 0 {
-				result = plural(int(weeks), "week") + plural(int(days), "day") + plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else if days > 0 {
-				result = plural(int(days), "day") + plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else if hours > 0 {
-				result = plural(int(hours), "hour") + plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else if minutes > 0 {
-				result = plural(int(minutes), "minute") + plural(int(seconds), "second")
-			} else {
-				result = plural(int(seconds), "second")
-			}
+			builder.WriteString(plural(int(value), unit.name))
 		}
 	}
 
-	return stringUtils.Trim(result)
+	return stringUtils.Trim(builder.String())
 }
 
 func getTerminalWidth() int {
