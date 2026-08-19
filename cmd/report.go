@@ -934,7 +934,7 @@ func pushEntries(db *database.Database, entries []models.Entry) {
 						db.UpdateEntryPushed(httpRequest.EntryUid)
 					} else {
 						var entry models.Entry = db.GetEntry(httpRequest.EntryUid)
-						return fmt.Errorf("for Entry[%s] Jira Server responded: %v\n{%q}",
+						return fmt.Errorf("for Entry[%s] Jira Server responded: %v\n{%q}.\nCheck your JIRA configuration for incorrect url, username, and/or api_key.",
 							entry.Dump(false, 0), result.Status, body)
 					}
 				}
