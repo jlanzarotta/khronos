@@ -181,9 +181,12 @@ func runAmend(cmd *cobra.Command, _ []string) {
 }
 
 func prompt(label string, value string) string {
-	fmt.Fprintf(os.Stderr, "Enter %s (empty for no change) ["+value+"] > ", label)
-    s, _ := readLine(stdinReader)
-    s = strings.TrimSpace(s)
+	// Prompts go to stdout, matching promptForNote and yesNoPrompt. Writing
+	// this one to stderr made prompt ordering unpredictable under redirection.
+	fmt.Printf("Enter %s (empty for no change) ["+value+"] > ", label)
+
+	s, _ := readLine(stdinReader)
+	s = strings.TrimSpace(s)
 
 	// If the result is empty, use the original passed in value.
 	if s == constants.EMPTY {

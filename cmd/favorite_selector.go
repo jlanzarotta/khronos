@@ -244,11 +244,18 @@ func (m favoriteSelectorModel) helpLine() string {
 // chosen index along with ok=true. On cancel it returns (-1, false). The
 // caption and config path are shown in the help line below the table.
 func selectFavorite(caption, config string, favs []Favorite) (int, bool, error) {
+	if !interactiveTerminal() {
+		return -1, false, errNotATerminal
+	}
+
 	m := newFavoriteSelectorModel(caption, config, favs)
 
 	// Inline (no alt-screen): renders in normal terminal flow.
 	p := tea.NewProgram(m)
-	final, err := p.Run()
+
+	// runTUI, not p.Run: it restores cooked mode on the way out so the prompts
+	// that follow this selector still echo what the user types.
+	final, err := runTUI(p)
 	if err != nil {
 		return -1, false, err
 	}
