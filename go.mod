@@ -1,6 +1,6 @@
 module khronos
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/agrison/go-commons-lang v0.0.0-20240106075236-2e001e6401ef
@@ -9,9 +9,9 @@ require (
 	github.com/dromara/carbon/v2 v2.6.17
 	github.com/ijt/go-anytime v1.9.2
 	github.com/mattn/go-isatty v0.0.24
-	github.com/mattn/go-runewidth v0.0.28
-	golang.org/x/term v0.45.0
-	modernc.org/sqlite v1.57.0
+	github.com/mattn/go-runewidth v0.0.29
+	golang.org/x/term v0.46.0
+	modernc.org/sqlite v1.58.0
 )
 
 require (
@@ -38,9 +38,9 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v1.0.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	modernc.org/libc v1.75.6 // indirect
+	modernc.org/libc v1.75.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
@@ -61,7 +61,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.21.0
 	github.com/subosito/gotenv v1.6.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
