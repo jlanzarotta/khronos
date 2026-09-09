@@ -43,16 +43,18 @@ import (
 // and letting it try either errors out obscurely or hangs.
 var errNotATerminal = errors.New("interactive selection requires a terminal")
 
-// runTUI runs a Bubble Tea program and guarantees that the terminal is back in
-// cooked mode (echo on, line input on) before control returns to the caller.
+// runTUI runs a Bubble Tea program and restores the terminal state that was in
+// effect before it started.
 //
-// Bubble Tea puts the console into raw mode and reads stdin from its own
-// goroutine. When p.Run() returns, restoring the console mode and tearing down
-// that reader race with whatever we do next. If our own prompts (readLine on
-// stdinReader) start before the restore has fully landed, the terminal is still
-// in raw mode: keystrokes are accepted but never echoed, and Enter arrives as a
-// bare '\r' instead of '\n'. Snapshotting the terminal state here and restoring
-// it unconditionally removes the dependency on Bubble Tea's teardown timing.
+// This is belt and braces, not a fix for anything. Bubble Tea already restores
+// the console input mode twice on its way out: conInputReader.Close puts back
+// the mode it captured, and restoreInput puts back the pre-MakeRaw state. The
+// restore here only matters if a future Bubble Tea version stops doing that, or
+// if a program exits on a path that skips its own teardown.
+//
+// Do not read this function as the reason the "typing shows nothing" bug went
+// away. That bug was the inline renderer erasing the prompt line, and the fix
+// for it is tea.WithAltScreen on the selectors. See the comment there.
 func runTUI(p *tea.Program) (tea.Model, error) {
 	fd := int(os.Stdin.Fd())
 
