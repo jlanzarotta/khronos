@@ -250,14 +250,12 @@ func selectFavorite(caption, config string, favs []Favorite) (int, bool, error) 
 
 	m := newFavoriteSelectorModel(caption, config, favs)
 
-	// Alt-screen, not inline. The inline renderer counts the lines it painted
-	// and erases that many on the way out. When the width it measured does not
-	// match the width the terminal actually wraps at (psmux is where this shows
-	// up), the count is wrong and the cleanup erases the line the next prompt
-	// is written on, along with anything typed onto it. The alt screen paints
-	// on a separate buffer, so there is no line arithmetic to get wrong.
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	// Inline (no alt-screen): renders in normal terminal flow, so the table
+	// stays in the scrollback where the user can still see it.
+	p := tea.NewProgram(m)
 
+	// runTUI, not p.Run: it clears the character attributes Bubble Tea leaves
+	// active, which otherwise bleed into the prompts that follow.
 	final, err := runTUI(p)
 	if err != nil {
 		return -1, false, err

@@ -32,6 +32,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -43,29 +44,47 @@ import (
 // and letting it try either errors out obscurely or hangs.
 var errNotATerminal = errors.New("interactive selection requires a terminal")
 
-// runTUI runs a Bubble Tea program and restores the terminal state that was in
-// effect before it started.
+// sgrReset clears every character attribute the terminal has active: color,
+// bold, faint, reverse and the rest. It is the standard "back to normal" escape
+// sequence and is safe to emit on any terminal.
+const sgrReset = "\x1b[0m"
+
+// runTUI runs a Bubble Tea program and cleans up the two pieces of terminal
+// state that Bubble Tea leaves behind.
 //
-// This is belt and braces, not a fix for anything. Bubble Tea already restores
-// the console input mode twice on its way out: conInputReader.Close puts back
-// the mode it captured, and restoreInput puts back the pre-MakeRaw state. The
-// restore here only matters if a future Bubble Tea version stops doing that, or
-// if a program exits on a path that skips its own teardown.
+// Character attributes. Bubble Tea's teardown resets the alt screen, the mouse
+// modes, bracketed paste and focus events, but it never emits an SGR reset. Its
+// last painted frame is styled (lipgloss for the help line, go-pretty for the
+// table), so whatever attribute was active at the end of that frame is still
+// active when we return. Worse, standardRenderer.flush truncates each line with
+// ansi.Truncate(line, r.width, ""), and on Windows r.width is measured once at
+// program start and never updated, because there is no SIGWINCH. Under a
+// multiplexer such as psmux, r.width can be wrong for the whole run, so the
+// truncation cuts at the wrong column and can drop the trailing reset sequence
+// off a styled line. The terminal is then left with a foreground attribute set.
+// If that attribute happens to render close to the background, everything
+// printed afterward is invisible, including the terminal's echo of what the
+// user types at the next prompt. Emitting a reset here costs nothing and closes
+// that hole.
 //
-// Do not read this function as the reason the "typing shows nothing" bug went
-// away. That bug was the inline renderer erasing the prompt line, and the fix
-// for it is tea.WithAltScreen on the selectors. See the comment there.
+// Console input mode. Bubble Tea already restores this twice on its way out
+// (conInputReader.Close puts back the mode it captured, restoreInput puts back
+// the pre-MakeRaw state), so the restore below is belt and braces. It matters
+// only if a future version stops doing that, or on an exit path that skips
+// Bubble Tea's own teardown.
 func runTUI(p *tea.Program) (tea.Model, error) {
 	fd := int(os.Stdin.Fd())
 
 	state, err := term.GetState(fd)
 	if err != nil {
 		// Not a terminal, so there is nothing to save or restore.
+		defer fmt.Print(sgrReset)
 		return p.Run()
 	}
 
 	defer func() {
 		_ = term.Restore(fd, state)
+		fmt.Print(sgrReset)
 	}()
 
 	return p.Run()
