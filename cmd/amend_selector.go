@@ -44,10 +44,8 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// entrySelectorModel renders a list of entries as a fully-bordered go-pretty
-// table and lets the user move a cursor, jump to a row by number, and select.
-// It mirrors favoriteSelectorModel; the difference is the columns rendered and
-// that there is no config path in the help line.
+// entrySelectorModel renders a list of entries as a go-pretty table and lets the
+// user move a cursor, jump to a row by number, and select.
 type entrySelectorModel struct {
 	entries []models.Entry
 
@@ -68,9 +66,7 @@ func newEntrySelectorModel(caption string, entries []models.Entry) entrySelector
 	}
 }
 
-// renderTable builds the go-pretty table string with the cursor row
-// highlighted. The "#" column is displayed 1-based to match the original amend
-// listing, while the cursor still tracks the 0-based slice index internally.
+// renderTable builds the table with the cursor row highlighted.
 func (m entrySelectorModel) renderTable() string {
 	t := table.NewWriter()
 
@@ -85,8 +81,6 @@ func (m entrySelectorModel) renderTable() string {
 	})
 
 	for i, entry := range m.entries {
-		// Display number is 1-based; store it as an int so the row painter can
-		// match against the cursor (cursor+1).
 		t.AppendRow(table.Row{
 			i + 1,
 			entry.Project,
@@ -97,7 +91,7 @@ func (m entrySelectorModel) renderTable() string {
 
 	cursor := m.cursor
 	t.SetRowPainter(func(row table.Row) text.Colors {
-		// row[0] is the 1-based "#"; the cursor is 0-based, so compare to cursor+1.
+		// The "#" column is 1-based while the cursor is 0-based.
 		if len(row) > 0 {
 			if idx, ok := row[0].(int); ok && idx == cursor+1 {
 				return text.Colors{text.BgBlue, text.FgHiWhite}
@@ -133,8 +127,7 @@ func (m entrySelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.numBuf != "" {
-				// The user types the 1-based number they see; convert to the
-				// 0-based cursor index.
+				// Typed row numbers are 1-based.
 				if n, err := strconv.Atoi(m.numBuf); err == nil {
 					if n >= 1 && n <= len(m.entries) {
 						m.cursor = n - 1
@@ -202,12 +195,9 @@ func selectEntry(caption string, entries []models.Entry) (int, bool, error) {
 
 	m := newEntrySelectorModel(caption, entries)
 
-	// Inline (no alt-screen): renders in normal terminal flow, so the table
-	// stays in the scrollback where the user can still see it.
+	// No alt screen, so the table stays in the scrollback.
 	p := tea.NewProgram(m)
 
-	// runTUI, not p.Run: it clears the character attributes Bubble Tea leaves
-	// active, which otherwise bleed into the prompts that follow.
 	final, err := runTUI(p)
 	if err != nil {
 		return -1, false, err

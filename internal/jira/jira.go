@@ -61,30 +61,30 @@ var JiraBrowseTicketUrl string
 //    }
 //  }
 
-// Top‑level payload
+// Payload is the top-level Jira worklog request body.
 type Payload struct {
-	Started          string  `json:"started"`          // we’ll fill this with a formatted time string
+	Started          string  `json:"started"`          // formatted with JIRATimeLayout
 	TimeSpentSeconds int64   `json:"timeSpentSeconds"` // seconds as an integer
 	Comment          Comment `json:"comment"`
 }
 
-// Nested “comment” object
+// Comment is the worklog comment in Atlassian Document Format.
 type Comment struct {
 	Type    string  `json:"type"`    // always "doc"
 	Version int     `json:"version"` // usually 1
-	Content []Block `json:"content"` // slice of blocks (paragraphs, tables, …)
+	Content []Block `json:"content"` // paragraphs, tables, etc.
 }
 
-// One block inside the comment – here we only need a paragraph
+// Block is one block inside the comment, for example a paragraph.
 type Block struct {
-	Type    string     `json:"type"`    // e.g. "paragraph"
-	Content []TextNode `json:"content"` // the actual text runs inside the paragraph
+	Type    string     `json:"type"`    // for example "paragraph"
+	Content []TextNode `json:"content"` // text runs inside the paragraph
 }
 
-// Text node inside a paragraph
+// TextNode is a text run inside a paragraph.
 type TextNode struct {
 	Type string `json:"type"` // always "text"
-	Text string `json:"text"` // the visible string
+	Text string `json:"text"` // the visible text
 }
 
 func FormatJiraUrl(url string, ticket string) string {
@@ -101,27 +101,19 @@ type JiraRequest struct {
 	Payload  []byte
 }
 
-// JIRATimeLayout is the layout Jira expects.
-// Note the three‑digit millisecond part (".000") and the offset without a colon.
+// JIRATimeLayout is the layout Jira expects: three-digit milliseconds and an
+// offset without a colon.
 const JIRATimeLayout = "2006-01-02T15:04:05.000-0700"
 
-// UTCToJira takes a timestamp string that is guaranteed to be in UTC
-// (e.g. "2026-11-04T16:00:28+00:00") and returns it formatted for Jira.
-// If the input cannot be parsed, an error is returned.
+// UTCToJira converts an RFC3339 UTC timestamp, for example
+// "2026-11-04T16:00:28+00:00", to the layout Jira expects.
 func UTCToJira(utcStr string) (string, error) {
-	// Parse the incoming string as RFC3339 (covers the "+00:00" suffix).
 	t, err := time.Parse(time.RFC3339, utcStr)
 	if err != nil {
 		return "", fmt.Errorf("cannot parse %q as RFC3339 UTC timestamp: %w", utcStr, err)
 	}
 
-	// Ensure the time is in UTC – Parse already does this for "+00:00",
-	// but calling UTC() makes the intent explicit and also covers inputs
-	// that might omit the offset.
-	utc := t.UTC()
-
-	// Format using Jira’s layout.
-	return utc.Format(JIRATimeLayout), nil
+	return t.UTC().Format(JIRATimeLayout), nil
 }
 
 func JiraNewRequests(roundToMinutes int64, entries []models.Entry) (result []JiraRequest) {
@@ -144,7 +136,6 @@ func JiraNewRequests(roundToMinutes int64, entries []models.Entry) (result []Jir
 				os.Exit(1)
 			}
 
-			// Fill a fresh Payload struct.
 			p := Payload{
 				Started:          jiraTime,
 				TimeSpentSeconds: util.Round(roundToMinutes, entry.Duration),

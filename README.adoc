@@ -101,17 +101,18 @@ debug: false <2>
 display_by_day_totals: true <3>
 display_time_in_24h_format: false <4>
 display_hms_abbreviated: false <5>
-report: <6>
+editor: notepad <6>
+report: <7>
     by_day: true
     by_entry: true
     by_project: true
     by_task: true
-require_note: false <7>
-round_to_minutes: 15 <8>
-week_start: Sunday <9>
-show_by_day_totals: true <10>
-split_work_from_break_time: false <11>
-favorites: <12>
+require_note: false <8>
+round_to_minutes: 15 <9>
+week_start: Sunday <10>
+show_by_day_totals: true <11>
+split_work_from_break_time: false <12>
+favorites: <13>
   - favorite: general+training
   - favorite: general+product development
   - favorite: general+personal time
@@ -124,13 +125,14 @@ favorites: <12>
 <3> If day totals should be displayed on the reports or not. Default is `true`.
 <4> If time should be displayed in 24 hour format or not. Default is `false`.
 <5> If hours, minutes, and seconds should be abbreviated to h, m, and s, to save display area.
-<6> Indicates which reports to run and which ones not to.
-<7> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
-<8> The number of minutes to round up or down to when running reports.  This makes it easy to report on consistent time "buckets".
-<9> The day used to indicate the start of the week.  Some companies' weeks start on Saturday, some on Sunday.  This allows you to change that start day to fit your needs.  The default is `Sunday`.
-<10> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
-<11> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
-<12> The list of favorites.
+<6> The editor used by the `edit` command to open the configuration file.  On Microsoft Windows(R) the default is `notepad`.  On all other operating systems the default is the value of `$VISUAL`, then `$EDITOR`, and finally `vi` if neither is set.
+<7> Indicates which reports to run and which ones not to.
+<8> If a note is required when entering a new entry into Khronos.  Default is `false`. This overrides favorite specific configuration.
+<9> The number of minutes to round up or down to when running reports.  This makes it easy to report on consistent time "buckets".
+<10> The day used to indicate the start of the week.  Some companies' weeks start on Saturday, some on Sunday.  This allows you to change that start day to fit your needs.  The default is `Sunday`.
+<11> Should a daily total be shown for each day when rendering the "by day" report.  Default is `true`.
+<12> Indicates if work and break time should be split into separate values during reports or not.  The default is `false`.
+<13> The list of favorites.
 
 == Date/Time
 
@@ -466,12 +468,24 @@ The previous command tells Khronos that you just finished your lunch break.
 
 === edit
 
-The `edit` command tells Khronos you would like to edit the Khronos configuration file with the default system editor.
+The `edit` command tells Khronos you would like to edit the Khronos configuration file with the editor defined by the `editor` configuration option.  Khronos waits until the editor is closed before returning.
 
 [source, shell]
 ----
 $ k edit
 ----
+
+The `editor` value may include arguments, and it may be a full path to the executable, even when that path contains spaces.
+
+[source, yaml]
+----
+# Use only one of the following.
+editor: nvim
+editor: code --wait
+editor: C:\Program Files\Notepad++\notepad++.exe
+----
+
+NOTE: Editors that normally return immediately, such as Visual Studio Code, need their "wait" argument (for example `--wait`) so Khronos does not return before you finish editing.
 
 === nuke
 

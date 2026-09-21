@@ -190,7 +190,7 @@ func getExplodeImage(width int, height int, frame int, max int) string {
 					buf.WriteRune(' ')
 				}
 			} else {
-				// If not explosion, then it's empty space.
+				// If not explosion, then it is empty space.
 				buf.WriteRune(' ')
 			}
 		}

@@ -40,38 +40,15 @@ import (
 )
 
 // errNotATerminal is returned by the interactive selectors when stdin/stdout
-// are not a real terminal. Bubble Tea cannot drive a selector in that case,
-// and letting it try either errors out obscurely or hangs.
+// are not a real terminal.
 var errNotATerminal = errors.New("interactive selection requires a terminal")
 
-// sgrReset clears every character attribute the terminal has active: color,
-// bold, faint, reverse and the rest. It is the standard "back to normal" escape
-// sequence and is safe to emit on any terminal.
+// sgrReset clears all active terminal character attributes.
 const sgrReset = "\x1b[0m"
 
-// runTUI runs a Bubble Tea program and cleans up the two pieces of terminal
-// state that Bubble Tea leaves behind.
-//
-// Character attributes. Bubble Tea's teardown resets the alt screen, the mouse
-// modes, bracketed paste and focus events, but it never emits an SGR reset. Its
-// last painted frame is styled (lipgloss for the help line, go-pretty for the
-// table), so whatever attribute was active at the end of that frame is still
-// active when we return. Worse, standardRenderer.flush truncates each line with
-// ansi.Truncate(line, r.width, ""), and on Windows r.width is measured once at
-// program start and never updated, because there is no SIGWINCH. Under a
-// multiplexer such as psmux, r.width can be wrong for the whole run, so the
-// truncation cuts at the wrong column and can drop the trailing reset sequence
-// off a styled line. The terminal is then left with a foreground attribute set.
-// If that attribute happens to render close to the background, everything
-// printed afterward is invisible, including the terminal's echo of what the
-// user types at the next prompt. Emitting a reset here costs nothing and closes
-// that hole.
-//
-// Console input mode. Bubble Tea already restores this twice on its way out
-// (conInputReader.Close puts back the mode it captured, restoreInput puts back
-// the pre-MakeRaw state), so the restore below is belt and braces. It matters
-// only if a future version stops doing that, or on an exit path that skips
-// Bubble Tea's own teardown.
+// runTUI runs a Bubble Tea program, then restores the console input mode and
+// resets character attributes. Bubble Tea never emits an SGR reset on exit, so
+// a leftover attribute can make the following prompts invisible.
 func runTUI(p *tea.Program) (tea.Model, error) {
 	fd := int(os.Stdin.Fd())
 

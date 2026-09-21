@@ -15,7 +15,7 @@ func (e *ExportType) String() string {
 	return string(*e)
 }
 
-// Set must have pointer receiver so it doesn't change the value of a copy.
+// Set must have pointer receiver so it does not change the value of a copy.
 func (e *ExportType) Set(v string) error {
 	switch v {
 	case string(ExportTypeCSV), string(ExportTypeHTML), string(ExportTypeMarkDown):

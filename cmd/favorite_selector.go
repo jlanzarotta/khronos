@@ -45,11 +45,8 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-// favoriteSelectorModel renders the favorites as a fully-bordered go-pretty
-// table (identical borders to `show --favorites`) and lets the user move a
-// cursor, jump to a row by number, and select. The highlight is done by
-// go-pretty's SetRowPainter, so the box-drawing stays intact rather than being
-// overlaid with ANSI after the fact.
+// favoriteSelectorModel renders the favorites as a go-pretty table and lets the
+// user move a cursor, jump to a row by number, and select.
 type favoriteSelectorModel struct {
 	favs             []Favorite
 	descriptionFound bool
@@ -86,12 +83,11 @@ func newFavoriteSelectorModel(caption, config string, favs []Favorite) favoriteS
 	}
 }
 
-// renderTable builds the go-pretty table string with the cursor row highlighted.
-// This mirrors showFavoritesTable's column logic so the look matches exactly.
+// renderTable builds the table with the cursor row highlighted, using the same
+// column layout as showFavoritesTable.
 func (m favoriteSelectorModel) renderTable() string {
 	t := table.NewWriter()
 
-	// Match the column layout used by showFavoritesTable.
 	var requiredNoteColumn int
 	if m.descriptionFound && m.ticketFound {
 		t.AppendHeader(table.Row{"#", constants.PROJECT_TASK, constants.DESCRIPTION, constants.URL, constants.REQUIRE_NOTE_WITH_ASTERISK})
@@ -117,9 +113,6 @@ func (m favoriteSelectorModel) renderTable() string {
 	})
 
 	for i, f := range m.favs {
-		// Display number is 1-based; stored as an int so the row painter can
-		// match against the cursor (cursor+1). The selector still returns the
-		// 0-based slice index to callers.
 		num := i + 1
 		if m.descriptionFound && m.ticketFound {
 			t.AppendRow(table.Row{num, f.Favorite, f.Description, jira.FormatJiraUrl(jira.JiraBrowseTicketUrl, f.Ticket), f.RequireNote})
@@ -132,9 +125,7 @@ func (m favoriteSelectorModel) renderTable() string {
 		}
 	}
 
-	// Highlight the cursor row. RowPainter receives the row and is invoked per
-	// row before render; we color the row whose number matches cursor+1 (the
-	// "#" column is 1-based while the cursor is 0-based).
+	// The "#" column is 1-based while the cursor is 0-based.
 	cursor := m.cursor
 	t.SetRowPainter(func(row table.Row) text.Colors {
 		if len(row) > 0 {
@@ -172,8 +163,7 @@ func (m favoriteSelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.numBuf != "" {
-				// The user types the 1-based number they see; convert to the
-				// 0-based cursor index.
+				// Typed row numbers are 1-based.
 				if n, err := strconv.Atoi(m.numBuf); err == nil {
 					if n >= 1 && n <= len(m.favs) {
 						m.cursor = n - 1
@@ -222,8 +212,6 @@ func (m favoriteSelectorModel) helpLine() string {
 		keys = "jump to row: " + m.numBuf + "  (enter to go, backspace to edit)"
 	}
 
-	// First line: the action caption plus the config file path. Second line:
-	// the keybindings (or the jump prompt while typing a number).
 	var b strings.Builder
 	header := m.caption
 	if m.config != "" {
@@ -241,8 +229,7 @@ func (m favoriteSelectorModel) helpLine() string {
 }
 
 // selectFavorite launches the interactive favorites selector and returns the
-// chosen index along with ok=true. On cancel it returns (-1, false). The
-// caption and config path are shown in the help line below the table.
+// chosen index along with ok=true. On cancel it returns (-1, false).
 func selectFavorite(caption, config string, favs []Favorite) (int, bool, error) {
 	if !interactiveTerminal() {
 		return -1, false, errNotATerminal
@@ -250,12 +237,9 @@ func selectFavorite(caption, config string, favs []Favorite) (int, bool, error) 
 
 	m := newFavoriteSelectorModel(caption, config, favs)
 
-	// Inline (no alt-screen): renders in normal terminal flow, so the table
-	// stays in the scrollback where the user can still see it.
+	// No alt screen, so the table stays in the scrollback.
 	p := tea.NewProgram(m)
 
-	// runTUI, not p.Run: it clears the character attributes Bubble Tea leaves
-	// active, which otherwise bleed into the prompts that follow.
 	final, err := runTUI(p)
 	if err != nil {
 		return -1, false, err

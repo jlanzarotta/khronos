@@ -33,8 +33,11 @@ package cmd
 import (
 	"khronos/constants"
 	"log"
+	"os"
 	"os/exec"
+	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -54,11 +57,34 @@ func init() {
 }
 
 func runEdit(_ *cobra.Command, _ []string) {
-	log.Printf("Opening the %s file in your default editor...\n", viper.ConfigFileUsed())
-	exePath := "c:\\windows\\system32\\notepad.exe"
-	cmd := exec.Command(exePath, viper.ConfigFileUsed())
-	err := cmd.Start()
-	if err != nil {
-		log.Fatal(err)
+	editor := strings.TrimSpace(viper.GetString(constants.EDITOR))
+	if editor == constants.EMPTY {
+		editor = defaultEditor()
 	}
+
+	program, args := splitEditorCommand(editor)
+	log.Printf("Opening the %s file in %s...\n", viper.ConfigFileUsed(), program)
+
+	cmd := exec.Command(program, append(args, viper.ConfigFileUsed())...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		log.Fatalf("%s: Unable to launch editor[%s]: %s\n",
+			color.RedString(constants.FATAL_NORMAL_CASE), editor, err.Error())
+	}
+}
+
+// splitEditorCommand splits the configured editor into a program and its
+// arguments, e.g. "code --wait". A value that resolves to an executable as a
+// whole is kept intact so paths containing spaces still work.
+func splitEditorCommand(editor string) (string, []string) {
+	if _, err := exec.LookPath(editor); err == nil {
+		return editor, nil
+	}
+
+	fields := strings.Fields(editor)
+	return fields[0], fields[1:]
 }

@@ -85,8 +85,7 @@ func getFavorite(index int) Favorite {
 	}
 
 	if index >= len(config.Favorites) {
-		// index is 0-based internally; report it 1-based to match what the user
-		// typed on the --favorite flag.
+		// Report the index 1-based to match the --favorite flag.
 		log.Fatalf("%s: Favorite[%d] not found in configuration file[%s].\n", color.RedString(constants.FATAL_NORMAL_CASE), index+1, viper.ConfigFileUsed())
 		os.Exit(1)
 	}
@@ -145,21 +144,17 @@ func runAdd(cmd *cobra.Command, args []string) {
 	favorite, _ := cmd.Flags().GetInt(constants.FAVORITE)
 
 	if favorite != -999 {
-		// The --favorite flag is 1-based for the user (matching the displayed
-		// "#" column); getFavorite indexes 0-based, so convert here.
+		// The --favorite flag is 1-based; getFavorite is 0-based.
 		var fav Favorite = getFavorite(favorite - 1)
 		projectTask = fav.Favorite
-        description = fav.Description
+		description = fav.Description
 		ticket = fav.Ticket
 		requiredNote = fav.RequireNote
 	} else {
 		if len(args) > 0 {
 			projectTask = args[0]
 		} else {
-			// Since no parameters were specified, do an interactive add using
-			// the bubbles/table selector. The selector displays the favorites
-			// and returns the chosen index directly, replacing the old
-			// show-then-prompt-for-a-number loop.
+			// No parameters were specified, so do an interactive add.
 			favs := loadFavorites()
 			if len(favs) <= 0 {
 				log.Fatalf("%s: No favorites found in configuration file[%s].  Unable to perform an interactive add.\n",
@@ -174,7 +169,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 				os.Exit(1)
 			}
 
-			// User cancelled (q/esc/ctrl+c or no selection): nothing to add.
+			// User canceled, so there is nothing to add.
 			if !ok {
 				log.Printf("%s\n", color.YellowString("Nothing added."))
 				os.Exit(0)
@@ -182,7 +177,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 
 			var fav Favorite = getFavorite(idx)
 			projectTask = fav.Favorite
-            description = fav.Description
+			description = fav.Description
 			ticket = fav.Ticket
 			requiredNote = fav.RequireNote
 		}
@@ -252,12 +247,12 @@ func promptForNote(projectTask string, description string, required bool) string
 		prompt += "["
 		prompt += pieces[1]
 
-        if !stringUtils.IsEmpty(description) {
-		    prompt += "] "
-		    prompt += color.YellowString("Description")
-		    prompt += "["
-		    prompt += description
-        }
+		if !stringUtils.IsEmpty(description) {
+			prompt += "] "
+			prompt += color.YellowString("Description")
+			prompt += "["
+			prompt += description
+		}
 
 		prompt += "] requires a note...\n"
 	} else {
@@ -274,18 +269,15 @@ func promptForNote(projectTask string, description string, required bool) string
 }
 
 // readLine reads a single line of input from r, terminated by '\n', '\r',
-// or '\r\n'. Unlike bufio.Reader.ReadString('\n'), this tolerates a bare
-// '\r' - which is what a raw-mode terminal (e.g. one left in that state by
-// a Bubble Tea program that hasn't fully restored cooked mode yet) sends
-// for the Enter key instead of '\n'. Without this, ReadString('\n') can
-// block forever waiting for a byte that never arrives.
+// or '\r\n'. A terminal still in raw mode sends a bare '\r' for Enter, which
+// would block bufio.Reader.ReadString('\n') forever.
 func readLine(r *bufio.Reader) (string, error) {
 	var sb strings.Builder
 
 	for {
 		b, err := r.ReadByte()
 		if err != nil {
-			// Return whatever we've accumulated so far (e.g. EOF mid-line).
+			// Return whatever was read so far, for example EOF mid-line.
 			return sb.String(), err
 		}
 
@@ -294,8 +286,8 @@ func readLine(r *bufio.Reader) (string, error) {
 		}
 
 		if b == '\r' {
-			// Peek ahead in case this is a "\r\n" pair; if so, consume the
-			// '\n' too so it doesn't leak into the next read.
+			// Consume the '\n' of a "\r\n" pair so it does not leak into the
+			// next read.
 			next, err := r.Peek(1)
 			if err == nil && len(next) == 1 && next[0] == '\n' {
 				_, _ = r.ReadByte()

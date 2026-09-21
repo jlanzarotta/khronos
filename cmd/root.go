@@ -40,6 +40,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
@@ -140,6 +141,9 @@ func initConfig() {
 	// Set debug to false.
 	viper.SetDefault(constants.DEBUG, false)
 
+	// Set the editor used by the edit command.
+	viper.SetDefault(constants.EDITOR, defaultEditor())
+
 	// Should a daily total be shown for each day when rendering the "by day"
 	// report.
 	viper.SetDefault(constants.DISPLAY_BY_DAY_TOTALS, true)
@@ -187,6 +191,7 @@ func initConfig() {
 
 	// Dump out some debug information.
 	if viper.GetBool(constants.DEBUG) {
+		log.Printf("%s = [%s]\n", constants.EDITOR, viper.GetString(constants.EDITOR))
 		log.Printf("%s = [%s]\n", constants.REQUIRE_NOTE, viper.GetString(constants.REQUIRE_NOTE))
 		log.Printf("%s = [%s]\n", constants.WEEK_START, viper.GetString(constants.WEEK_START))
 		log.Printf("%s = [%d]\n", constants.ROUND_TO_MINUTES, viper.GetInt64(constants.ROUND_TO_MINUTES))
@@ -218,6 +223,22 @@ func initConfig() {
 		jira.JiraLogWorkToTicketUrl = jira.JiraPushUrl + constants.PUSH_JIRA_V3_URL_TEMPLATE
 		jira.JiraBrowseTicketUrl = jira.JiraPushUrl + "/browse/%s"
 	}
+}
+
+// defaultEditor returns notepad on Windows. On all other operating systems it
+// returns the user's default editor from $VISUAL or $EDITOR, falling back to vi.
+func defaultEditor() string {
+	if runtime.GOOS == "windows" {
+		return "notepad"
+	}
+
+	for _, name := range []string{"VISUAL", "EDITOR"} {
+		if value := strings.TrimSpace(os.Getenv(name)); value != constants.EMPTY {
+			return value
+		}
+	}
+
+	return "vi"
 }
 
 func writeDefaultFavorites(home string) {

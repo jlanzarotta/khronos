@@ -96,7 +96,7 @@ func runAmend(cmd *cobra.Command, _ []string) {
 		}
 
 		if !ok {
-			// User cancelled - nothing to amend.
+			// User canceled, so there is nothing to amend.
 			log.Printf("%s\n", color.YellowString("No entry amended."))
 			return
 		}
@@ -181,8 +181,6 @@ func runAmend(cmd *cobra.Command, _ []string) {
 }
 
 func prompt(label string, value string) string {
-	// Prompts go to stdout, matching promptForNote and yesNoPrompt. Writing
-	// this one to stderr made prompt ordering unpredictable under redirection.
 	fmt.Printf("Enter %s (empty for no change) ["+value+"] > ", label)
 
 	s, _ := readLine(stdinReader)
