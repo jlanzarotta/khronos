@@ -31,3 +31,6 @@ github_token
 
 # goreleaser dist directory.
 dist/
+
+# Claude output related directory.
+Claude outputs/

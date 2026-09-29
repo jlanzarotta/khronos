@@ -11,6 +11,9 @@ image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/khronos[Go Ver
 :sectnums:
 :numbered:
 :table-stripes: even
+:imagesdir: assets
+
+image::logo/khronos-logo-light.png[Logo]
 
 Khronos is a simple command line tool used to track the time you spend on a
 specific project and the one or more tasks associated with that project.  It was
