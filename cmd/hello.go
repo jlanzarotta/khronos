@@ -37,7 +37,6 @@ import (
 	"log"
 	"os"
 	"os/user"
-	"strings"
 	"time"
 
 	"github.com/agrison/go-commons-lang/stringUtils"
@@ -119,21 +118,12 @@ func runHello(cmd *cobra.Command, _ []string) {
 	// Get the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 
-	// Get the last Entry.
-	var lastEntry models.Entry = db.GetLastEntry()
-	if lastEntry.Uid != constants.UNKNOWN_UID {
-		// Check if the last entry was a HELLO. If is was, was it on the day as this
-		// new entry? If so, reject the new attempt to add a HELLO.
-		if strings.EqualFold(lastEntry.Project, constants.HELLO) {
-			var lastDateTime carbon.Carbon = *carbon.Parse(lastEntry.EntryDatetime)
-			var helloDateTime carbon.Carbon = *carbon.Parse(entry.EntryDatetime)
-			var diff int64 = lastDateTime.DiffAbsInDays(&helloDateTime)
-
-			if diff == 0 {
-				log.Printf("%s\n", color.YellowString("No need to start time tracking for today, as it was already started at "+lastDateTime.String()+"."))
-				return
-			}
-		}
+	// Only one HELLO is allowed per local calendar day.
+	existing, found := db.GetHelloForDay(helloTime)
+	if found {
+		var startedAt string = carbon.Parse(existing.EntryDatetime).ToDateTimeString(carbon.Local)
+		log.Printf("%s\n", color.YellowString("Time tracking for that day was already started at "+startedAt+". Nothing added."))
+		return
 	}
 
 	log.Printf("%s", greetings(helloTime)+" Time tracking has now started.\n")

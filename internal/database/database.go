@@ -387,6 +387,30 @@ func (db *Database) AllowedToAdd() bool {
 	}
 }
 
+// GetHelloForDay returns the earliest HELLO entry recorded on the same local
+// calendar day as the given time, and whether one was found.
+func (db *Database) GetHelloForDay(day carbon.Carbon) (models.Entry, bool) {
+	// Entries are stored in UTC, so the local day boundaries are converted to
+	// UTC to keep the string comparison valid.
+	var localDay *carbon.Carbon = day.Copy().SetTimezone(carbon.Local)
+	var start string = localDay.Copy().StartOfDay().ToIso8601String(carbon.UTC)
+	var end string = localDay.Copy().EndOfDay().ToIso8601String(carbon.UTC)
+
+	var uid int64
+	err := db.Conn.QueryRowContext(db.Context,
+		"SELECT e.uid FROM entry e WHERE e.project = ? AND e.entry_datetime BETWEEN ? AND ? ORDER BY e.entry_datetime LIMIT 1;",
+		constants.HELLO, start, end).Scan(&uid)
+	if err == sql.ErrNoRows {
+		return models.Entry{}, false
+	}
+	if err != nil {
+		log.Fatalf("%s: Error trying to retrieve HELLO entry for the day. %s.\n", color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	return db.GetEntry(uid), true
+}
+
 func (db *Database) GetFirstEntry() models.Entry {
 	result, err := db.Conn.QueryContext(db.Context, "SELECT e.uid FROM entry e ORDER BY entry_datetime LIMIT 1;")
 	if err != nil {
