@@ -61,6 +61,7 @@ func runTUI(p *tea.Program) (tea.Model, error) {
 
 	defer func() {
 		_ = term.Restore(fd, state)
+		ensureCookedInput()
 		fmt.Print(sgrReset)
 	}()
 

@@ -272,6 +272,10 @@ func promptForNote(projectTask string, description string, required bool) string
 // or '\r\n'. A terminal still in raw mode sends a bare '\r' for Enter, which
 // would block bufio.Reader.ReadString('\n') forever.
 func readLine(r *bufio.Reader) (string, error) {
+	// Repair the console if something left it raw, otherwise nothing typed
+	// here is echoed and Ctrl+C does not work.
+	ensureCookedInput()
+
 	var sb strings.Builder
 
 	for {
