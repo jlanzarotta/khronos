@@ -111,10 +111,6 @@ func runHello(cmd *cobra.Command, _ []string) {
 		helloTime = *carbon.CreateFromStdTime(atTime)
 	}
 
-	// Create a new Entry.
-	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY,
-		helloTime.ToIso8601String(carbon.UTC))
-
 	// Get the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
 
@@ -126,12 +122,19 @@ func runHello(cmd *cobra.Command, _ []string) {
 		return
 	}
 
+	insertHello(db, helloTime)
+}
+
+// insertHello writes a HELLO entry at helloTime and greets the user.
+func insertHello(db *database.Database, helloTime carbon.Carbon) {
+	var entry models.Entry = models.NewEntry(constants.UNKNOWN_UID, constants.HELLO, constants.EMPTY,
+		helloTime.ToIso8601String(carbon.UTC))
+
 	log.Printf("%s", greetings(helloTime)+" Time tracking has now started.\n")
 
 	if viper.GetBool(constants.DEBUG) {
 		log.Printf("helloTime=[%v] entry=[%v]\n", helloTime, entry)
 	}
 
-	// Write the new Entry to the database.
 	db.InsertNewEntry(entry)
 }

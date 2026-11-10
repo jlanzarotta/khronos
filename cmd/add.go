@@ -108,21 +108,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	// Get the --at flag.
 	atTimeStr, _ := cmd.Flags().GetString(constants.AT)
 
-	// Make sure there are records in the database.
 	db := database.New(viper.GetString(constants.DATABASE_FILE))
-	var lastEntry models.Entry = db.GetLastEntry()
-	if lastEntry.Uid == constants.UNKNOWN_UID {
-		log.Fatalf("%s: There are no records in your database yet. To start time tracking, please perform a %s first.\n",
-			color.RedString(constants.FATAL_NORMAL_CASE), color.YellowString(constants.COMMAND_HELLO))
-		os.Exit(1)
-	}
-
-	// Check if we are allowed to add. Each day we must first do a HELLO to start our day.
-	var allowed bool = db.AllowedToAdd()
-	if allowed == false {
-		log.Fatalf("%s: Unable to add entries. A `hello` must be done first thing each day.\n", color.RedString(constants.FATAL_NORMAL_CASE))
-		os.Exit(1)
-	}
 
 	// Check it the --at flag was enter or not.
 	if !stringUtils.IsEmpty(atTimeStr) {
@@ -134,6 +120,17 @@ func runAdd(cmd *cobra.Command, args []string) {
 		}
 
 		addTime = *carbon.CreateFromStdTime(atTime)
+	}
+
+	// Each day must start with a HELLO. If there is none for the day being
+	// added to, offer one; it is written only if the entry is confirmed.
+	var helloTime *carbon.Carbon = nil
+	if _, found := db.GetHelloForDay(addTime); !found {
+		helloTime = promptForHello(addTime)
+		if helloTime == nil {
+			log.Printf("%s\n", color.YellowString("Nothing added."))
+			os.Exit(0)
+		}
 	}
 
 	var projectTask string = constants.EMPTY
@@ -221,16 +218,64 @@ func runAdd(cmd *cobra.Command, args []string) {
 	}
 
 	// Prompt the user to make sure they really want to add this new entry.
+	if helloTime != nil {
+		log.Printf("Time tracking will be started at %s.\n", helloTime.Copy().ToDateTimeString(carbon.Local))
+	}
 	log.Printf("You are about to add this entry\n%s...\n\n", entry.Dump(true, constants.INDENT_AMOUNT))
 	yesNo := yesNoPrompt("Continue?")
 	if yesNo {
 		// Yes, they want the entry added. Write the new Entry to the database.
+		if helloTime != nil {
+			insertHello(db, *helloTime)
+		}
 		db.InsertNewEntry(entry)
 		log.Printf("%s.\n", color.GreenString("Entry added"))
 	} else {
 		// No, they do not want the entry added.
 		log.Printf("%s\n", color.YellowString("Nothing added."))
 	}
+}
+
+// promptForHello offers to start the day containing addTime. It returns the
+// chosen HELLO time, or nil if the user declined.
+func promptForHello(addTime carbon.Carbon) *carbon.Carbon {
+	var day string = addTime.Copy().ToDateString(carbon.Local)
+	var defaultTime string = addTime.Copy().ToTimeString(carbon.Local)
+
+	if !yesNoPrompt("A %s has not been done for %s. Do it now?", color.YellowString(constants.COMMAND_HELLO), day) {
+		return nil
+	}
+
+	fmt.Printf("Enter the start time, e.g. '8am' or '2 hours ago', or leave blank for %s. > ", defaultTime)
+	s, _ := readLine(stdinReader)
+	s = strings.TrimSpace(s)
+
+	if stringUtils.IsEmpty(s) {
+		return addTime.Copy()
+	}
+
+	// Relative to the entry so "8am" lands on the entry's day.
+	startTime, err := anytime.Parse(s, addTime.StdTime().In(time.Local))
+	if err != nil {
+		log.Fatalf("%s: Failed parsing start time. %s.  For natural date examples see https://github.com/ijt/go-anytime\n",
+			color.RedString(constants.FATAL_NORMAL_CASE), err.Error())
+		os.Exit(1)
+	}
+
+	var helloTime *carbon.Carbon = carbon.CreateFromStdTime(startTime)
+	if helloTime.Copy().ToDateString(carbon.Local) != day {
+		log.Fatalf("%s: Start time %s is not on %s.\n",
+			color.RedString(constants.FATAL_NORMAL_CASE), helloTime.Copy().ToDateTimeString(carbon.Local), day)
+		os.Exit(1)
+	}
+
+	if helloTime.Gt(&addTime) {
+		log.Fatalf("%s: Start time %s is after the entry time %s.\n",
+			color.RedString(constants.FATAL_NORMAL_CASE), helloTime.Copy().ToTimeString(carbon.Local), defaultTime)
+		os.Exit(1)
+	}
+
+	return helloTime
 }
 
 func promptForNote(projectTask string, description string, required bool) string {
